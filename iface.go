@@ -43,6 +43,8 @@ type Error struct {
 	Msg string
 }
 
+func (e *Error) Error() string { return fmt.Sprintf("%s in %s", e.Msg, e.Loc) }
+
 func ExpectEOF(out Output) Output {
 	if !out.Success {
 		return out
@@ -62,12 +64,13 @@ func ExpectEOF(out Output) Output {
 					candidate.toks[0], candidate.toks[0].Loc)))
 		}
 	}
-	return resultOrError(xs, err, len(xs) != 0)
+	return newOutput(xs, err, len(xs) != 0)
 }
 
 func ExpectSingleResult(out Output) (interface{}, error) {
 	if !out.Success {
-		return Result{}, newError(lexer.UnknownLoc, out.Error.Error())
+		// return Result{}, newError(lexer.UnknownLoc, out.Error.Error())
+		return Result{}, out.Error
 	}
 	if len(out.Candidates) == 0 {
 		return Result{}, newError(lexer.UnknownLoc, "No result is returned.")

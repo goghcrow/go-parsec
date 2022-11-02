@@ -26,7 +26,7 @@ const (
 	BP_PREFIX        // - !
 	BP_POSTFIX
 	BP_CALL   // ()
-	BP_MEMBER // . []
+	BP_MEMBER // . -> []
 )
 
 // Fixity Associativity
@@ -44,6 +44,7 @@ const (
 
 type Operator struct {
 	TokenKind
+	Lexeme string
 	BP
 	Fixity
 }
@@ -77,8 +78,8 @@ func IsOp(s string) bool { return opReg.MatchString(s) }
 // 使用 ops 之前, 需要先排下序
 func SortOpers(ops []Operator) []Operator {
 	sort.SliceStable(ops, func(i, j int) bool {
-		x := ops[i].TokenKind
-		y := ops[j].TokenKind
+		x := ops[i].Lexeme
+		y := ops[j].Lexeme
 		if x == y || len(x) == len(y) {
 			return false
 		}

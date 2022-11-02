@@ -5,6 +5,9 @@ import (
 	"unicode/utf8"
 )
 
+// BuildLexer
+// 这里没有取最长匹配, 而是首次匹配, so, 注意规则顺序
+// 具体可以参考 example/lexicon.go
 func BuildLexer(f func(lexicon *Lexicon)) *Lexer {
 	lex := NewLexicon()
 	f(&lex)
@@ -13,12 +16,23 @@ func BuildLexer(f func(lexicon *Lexicon)) *Lexer {
 
 func NewLexer(lex Lexicon) *Lexer { return &Lexer{Lexicon: lex} }
 
-func (l *Lexer) Lex(input string) []*Token {
+func (l *Lexer) MustLex(input string) []*Token {
+	toks, err := l.Lex(input)
+	if err != nil {
+		panic(err)
+	}
+	return toks
+}
+
+func (l *Lexer) Lex(input string) ([]*Token, error) {
 	l.input = []rune(input)
 	l.Loc = Loc{}
 	var toks []*Token
 	for {
-		t, keep := l.next()
+		t, keep, err := l.next()
+		if err != nil {
+			return toks, err
+		}
 		if t == nil {
 			break
 		}
@@ -26,7 +40,7 @@ func (l *Lexer) Lex(input string) []*Token {
 			toks = append(toks, t)
 		}
 	}
-	return toks
+	return toks, nil
 }
 
 type Lexer struct {
@@ -35,9 +49,9 @@ type Lexer struct {
 	input []rune
 }
 
-func (l *Lexer) next() (*Token, bool) {
+func (l *Lexer) next() (tok *Token, keep bool, err error) {
 	if l.Pos >= len(l.input) {
-		return nil, true
+		return nil, true, nil
 	}
 
 	pos := l.Loc
@@ -50,10 +64,10 @@ func (l *Lexer) next() (*Token, bool) {
 				l.Move(r)
 			}
 			pos.PosEnd = l.Loc.Pos
-			return &Token{TokenKind: rl.TokenKind, Lexeme: string(matched), Loc: pos}, rl.keep
+			return &Token{TokenKind: rl.TokenKind, Lexeme: string(matched), Loc: pos}, rl.keep, nil
 		}
 	}
-	panic(fmt.Errorf("syntax error in %s: nothing token matched", l.Loc))
+	return nil, false, fmt.Errorf("syntax error in %s: nothing token matched", l.Loc)
 }
 
 func runeCount(s string) int { return utf8.RuneCountInString(s) }

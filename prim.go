@@ -10,7 +10,7 @@ import (
 
 func Nil() Parser {
 	return newParser(func(toks []*lexer.Token) Output {
-		return success(Result{toks: toks})
+		return success([]Result{{toks: toks}})
 	})
 }
 
@@ -22,7 +22,8 @@ func Str(toMatch string) Parser {
 		if toks[0].Lexeme != toMatch {
 			return fail(unableToConsumeToken(toks[0]))
 		}
-		return success(Result{toks[0], toks[1:]})
+		// 消费 toks[0], toks[1:] 为剩余 token 序列
+		return success([]Result{{toks[0], toks[1:]}})
 	})
 }
 
@@ -34,6 +35,7 @@ func Tok(toMatch lexer.TokenKind) Parser {
 		if toks[0].TokenKind != toMatch {
 			return fail(unableToConsumeToken(toks[0]))
 		}
-		return success(Result{toks[0], toks[1:]})
+		// 消费 toks[0], toks[1:] 为剩余 token 序列
+		return success([]Result{{toks[0], toks[1:]}})
 	})
 }

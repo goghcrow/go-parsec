@@ -5,6 +5,7 @@ import (
 )
 
 // Apply :: p[a] -> (a -> b) -> p[b]
+// 📢 the data structural of v is topological equivalent to syntax structural of p
 func Apply(p Parser, f func(v interface{}) interface{}) Parser {
 	return newParser(func(toks []*lexer.Token) Output {
 		out := p.Parse(toks)
@@ -15,7 +16,7 @@ func Apply(p Parser, f func(v interface{}) interface{}) Parser {
 		for i, x := range out.Candidates {
 			xs[i] = Result{f(x.Val), x.toks}
 		}
-		return successX(xs, out.Error)
+		return successWithErr(xs, out.Error)
 	})
 }
 

@@ -24,13 +24,13 @@ func Amb(p Parser) Parser {
 		}
 
 		xs := make([]Result, 0, len(group))
-		for _, rs := range group {
-			xss := make([]interface{}, len(rs))
-			for i, v := range rs {
-				xss[i] = v.Val
+		for _, vals := range group {
+			merged := make([]interface{}, len(vals))
+			for i, v := range vals {
+				merged[i] = v.Val
 			}
-			xs = append(xs, Result{xss, rs[0].toks})
+			xs = append(xs, Result{merged, vals[0].toks})
 		}
-		return successX(xs, branches.Error)
+		return successWithErr(xs, branches.Error)
 	})
 }

@@ -6,13 +6,23 @@ import (
 	"testing"
 )
 
+const (
+	Number TokenKind = iota
+	Ident
+	Space
+	Comma
+)
+
+func stroftk(k TokenKind) string {
+	return map[TokenKind]string{
+		Number: "<num>",
+		Ident:  "<id>",
+		Space:  "<space>",
+		Comma:  ",",
+	}[k]
+}
+
 func TestLexer(t *testing.T) {
-	const (
-		Number TokenKind = "<num>"
-		Ident            = "<id>"
-		Space            = "<space>"
-		Comma            = ","
-	)
 	for _, tt := range []struct {
 		input  string
 		expect string
@@ -23,7 +33,7 @@ func TestLexer(t *testing.T) {
 			"<num>/123",
 			BuildLexer(func(lex *Lexicon) {
 				lex.Regex(Number, "\\d+")
-				lex.Str(Comma)
+				lex.Str(Comma, ",")
 			}),
 		},
 		{
@@ -31,7 +41,7 @@ func TestLexer(t *testing.T) {
 			"<num>/123🍌,/,🍌<num>/456",
 			BuildLexer(func(lex *Lexicon) {
 				lex.Regex(Number, "\\d+")
-				lex.Str(Comma)
+				lex.Str(Comma, ",")
 			}),
 		},
 		{
@@ -39,7 +49,7 @@ func TestLexer(t *testing.T) {
 			"<num>/123🍌<num>/456🍌<num>/789",
 			BuildLexer(func(lex *Lexicon) {
 				lex.Regex(Number, "\\d+")
-				lex.Str(Comma).Skip()
+				lex.Str(Comma, ",").Skip()
 			}),
 		},
 		{
@@ -49,12 +59,12 @@ func TestLexer(t *testing.T) {
 				lex.Regex(Number, "\\d+")
 				lex.Regex(Ident, "[a-zA-Z]\\w*")
 				lex.Regex(Space, "\\s+").Skip()
-				lex.Str(Comma).Skip()
+				lex.Str(Comma, ",").Skip()
 			}),
 		},
 	} {
 		t.Run(tt.input, func(t *testing.T) {
-			toks := tt.lexer.Lex(tt.input)
+			toks := tt.lexer.MustLex(tt.input)
 			actual := fmtToks(toks)
 			if actual != tt.expect {
 				t.Errorf("expect %s actual %s", tt.expect, actual)
@@ -66,7 +76,7 @@ func TestLexer(t *testing.T) {
 func fmtToks(toks []*Token) string {
 	xs := make([]string, len(toks))
 	for i, t := range toks {
-		xs[i] = fmt.Sprintf("%s/%s", t.TokenKind, t.Lexeme)
+		xs[i] = fmt.Sprintf("%s/%s", stroftk(t.TokenKind), t.Lexeme)
 	}
 	return strings.Join(xs, "🍌")
 }

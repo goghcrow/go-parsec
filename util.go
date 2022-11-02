@@ -1,7 +1,6 @@
 package parsec
 
 import (
-	"fmt"
 	"github.com/goghcrow/go-parsec/lexer"
 )
 
@@ -49,6 +48,7 @@ func (t tokSeq) equals(other tokSeq) bool {
 	return true
 }
 
+// 返回最远的错误
 func betterError(e1, e2 *Error) *Error {
 	if e1 == nil {
 		return e2
@@ -56,10 +56,10 @@ func betterError(e1, e2 *Error) *Error {
 	if e2 == nil {
 		return e1
 	}
-	if e1.Loc == lexer.UnknownLoc {
+	if e1.Loc == lexer.UnknownLoc { // eof
 		return e1
 	}
-	if e2.Loc == lexer.UnknownLoc {
+	if e2.Loc == lexer.UnknownLoc { // eof
 		return e2
 	}
 	if e1.Loc.Pos < e2.Loc.Pos {
@@ -74,12 +74,12 @@ func betterError(e1, e2 *Error) *Error {
 // Output
 // ----------------------------------------------------------------
 
-func fail(err *Error) Output                  { return Output{Success: false, Error: err} }
-func success(x Result) Output                 { return Output{Success: true, Candidates: []Result{x}} }
-func successX(xs []Result, err *Error) Output { return Output{true, xs, err} }
-func resultOrError(result []Result, err *Error, success bool) Output {
+func fail(err *Error) Output                        { return Output{Success: false, Error: err} }
+func success(xs []Result) Output                    { return Output{Success: true, Candidates: xs} }
+func successWithErr(xs []Result, err *Error) Output { return Output{true, xs, err} }
+func newOutput(xs []Result, err *Error, success bool) Output {
 	if success {
-		return successX(result, err)
+		return successWithErr(xs, err)
 	} else {
 		return fail(err)
 	}
@@ -89,13 +89,11 @@ func resultOrError(result []Result, err *Error, success bool) Output {
 // Error
 // ----------------------------------------------------------------
 
-func (e *Error) Error() string { return fmt.Sprintf("%s in %s", e.Msg, e.Loc) }
-
 func newError(loc lexer.Loc, msg string) *Error { return &Error{Loc: loc, Msg: msg} }
 func unableToConsumeToken(tok *lexer.Token) *Error {
 	return &Error{
 		Loc: tok.Loc,
-		Msg: "Unable to consume token " + tok.String(),
+		Msg: "Unable to consume token `" + tok.String() + "`",
 	}
 }
 
@@ -104,7 +102,7 @@ func unableToConsumeToken(tok *lexer.Token) *Error {
 // ----------------------------------------------------------------
 
 var eof = &lexer.Token{
-	TokenKind: "<END-OF-FILE>",
+	TokenKind: -1,
 	Loc:       lexer.UnknownLoc,
 	Lexeme:    "<END-OF-FILE>",
 }
@@ -116,4 +114,6 @@ func reverse(s []Result) []Result {
 	return s
 }
 
-func emptySlice() interface{} { return []interface{}{} }
+func anySlice() interface{} { return []interface{}{} }
+
+func anyIndex(v interface{}, i int) interface{} { return v.([]interface{})[i] }
