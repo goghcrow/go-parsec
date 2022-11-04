@@ -1,4 +1,4 @@
-package example
+package lexer
 
 import (
 	"github.com/goghcrow/go-parsec/lexer"
@@ -6,7 +6,7 @@ import (
 
 func NewBuiltinLexer(udOpers []lexer.Operator) *lexer.Lexer {
 	return &lexer.Lexer{
-		Lexicon: NewBuiltinLexicon(lexer.SortOpers(udOpers)),
+		Lexicon: NewBuiltinLexicon(udOpers),
 	}
 }
 
@@ -60,7 +60,7 @@ var builtInOpers = []lexer.Operator{
 	{QUESTION, "?:", lexer.BP_COND, lexer.INFIX_R},
 }
 
-func NewBuiltinLexicon(udOpers []lexer.Operator) lexer.Lexicon {
+func NewBuiltinLexicon(userDefinedOpers []lexer.Operator) lexer.Lexicon {
 	l := lexer.Lexicon{}
 
 	l.Regex(SPACE, "\\s+").Skip()
@@ -79,12 +79,12 @@ func NewBuiltinLexicon(udOpers []lexer.Operator) lexer.Lexicon {
 	}
 
 	// 内置的操作符优先级高于自定义操作符
-	for _, oper := range builtInOpers {
+	for _, oper := range lexer.SortOpers(builtInOpers) {
 		l.PrimOper(oper.TokenKind, oper.Lexeme)
 	}
 
 	// 自定义操作符
-	for _, oper := range udOpers {
+	for _, oper := range lexer.SortOpers(userDefinedOpers) {
 		l.Oper(oper.TokenKind, oper.Lexeme)
 	}
 

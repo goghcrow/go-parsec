@@ -14,14 +14,14 @@ type Parser interface {
 	Map(mapper func(v interface{}) interface{}) Parser
 }
 
-func NewRule() *Rule { return &Rule{} }
+func NewRule() *SyntaxRule { return &SyntaxRule{} }
 
-type Rule struct {
+type SyntaxRule struct {
 	Pattern Parser
 }
 
-func (i *Rule) Parse(toks []*lexer.Token) Output             { return i.Pattern.Parse(toks) }
-func (i *Rule) Map(f func(v interface{}) interface{}) Parser { return Apply(i, f) }
+func (i *SyntaxRule) Parse(toks []*lexer.Token) Output             { return i.Pattern.Parse(toks) }
+func (i *SyntaxRule) Map(f func(v interface{}) interface{}) Parser { return Apply(i, f) }
 
 // Output
 // If successful===true, it means that the candidates field is valid, even when it is empty.

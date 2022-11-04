@@ -8,11 +8,13 @@ func ListSc(p, s Parser) Parser { return Apply(Seq(p, RepSc(Seq(s, p))), applyLi
 
 // applyList :: (a, list[(sep, a)]) -> list[a]
 func applyList(v interface{}) interface{} {
-	var xs []interface{}
 	a := v.([]interface{})
-	xs = append(xs, a[0])
-	for _, it := range a[1].([]interface{}) {
-		xs = append(xs, it.([]interface{})[1])
+	fst := a[0]
+	rest := a[1].([]interface{})
+	xs := make([]interface{}, 1+len(rest))
+	xs[0] = fst
+	for i, it := range rest {
+		xs[i+1] = it.([]interface{})[1]
 	}
 	return xs
 }

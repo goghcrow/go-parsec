@@ -1,4 +1,4 @@
-package example
+package lexer
 
 import . "github.com/goghcrow/go-parsec/lexer"
 
