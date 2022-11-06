@@ -48,7 +48,7 @@ func TestParser(t *testing.T) {
 			input:   "123,456",
 			p:       Str("123"),
 			success: true,
-			result:  "{v=123, toks=<num>/456}",
+			result:  "{v=123, next=<num>/456}",
 		},
 		{
 			name:    "Parser: str",
@@ -62,14 +62,14 @@ func TestParser(t *testing.T) {
 			input:   "123,456",
 			p:       Tok(Number),
 			success: true,
-			result:  "{v=123, toks=<num>/456}",
+			result:  "{v=123, next=<num>/456}",
 		},
 		{
 			name:    "Parser: alt",
 			input:   "123,456",
 			p:       Alt(Tok(Number), Tok(Ident)),
 			success: true,
-			result:  "{v=123, toks=<num>/456}",
+			result:  "{v=123, next=<num>/456}",
 		},
 		{
 			name:    "Parser: seq",
@@ -83,77 +83,77 @@ func TestParser(t *testing.T) {
 			input:   "123,456",
 			p:       Seq(Tok(Number), Tok(Number)),
 			success: true,
-			result:  "{v=[123 456], toks=}",
+			result:  "{v=[123 456], next=}",
 		},
 		{
 			name:    "Parser: kleft, kmid, kright",
 			input:   "123,456,789",
 			p:       KLeft(Tok(Number), Seq(Tok(Number), Tok(Number))),
 			success: true,
-			result:  "{v=123, toks=}",
+			result:  "{v=123, next=}",
 		},
 		{
 			name:    "Parser: kleft, kmid, kright",
 			input:   "123,456,789",
 			p:       KMid(Tok(Number), Tok(Number), Tok(Number)),
 			success: true,
-			result:  "{v=456, toks=}",
+			result:  "{v=456, next=}",
 		},
 		{
 			name:    "Parser: kleft, kmid, kright",
 			input:   "123,456,789",
 			p:       KRight(Seq(Tok(Number), Tok(Number)), Tok(Number)),
 			success: true,
-			result:  "{v=789, toks=}",
+			result:  "{v=789, next=}",
 		},
 		{
 			name:    "Parser: opt",
 			input:   "123,456",
 			p:       Opt(Tok(Number)),
 			success: true,
-			result:  "{v=123, toks=<num>/456}🍊{v=<nil>, toks=<num>/123🍌<num>/456}",
+			result:  "{v=123, next=<num>/456}🍊{v=<nil>, next=<num>/123🍌<num>/456}",
 		},
 		{
 			name:    "Parser: opt_sc",
 			input:   "123,456",
 			p:       OptSc(Tok(Number)),
 			success: true,
-			result:  "{v=123, toks=<num>/456}",
+			result:  "{v=123, next=<num>/456}",
 		},
 		{
 			name:    "Parser: opt_sc",
 			input:   "123,456",
 			p:       OptSc(Tok(Ident)),
 			success: true,
-			result:  "{v=<nil>, toks=<num>/123🍌<num>/456}",
+			result:  "{v=<nil>, next=<num>/123🍌<num>/456}",
 		},
 		{
 			name:    "Parser: rep_sc",
 			input:   "123,456",
 			p:       RepSc(Tok(Number)),
 			success: true,
-			result:  "{v=[123 456], toks=}",
+			result:  "{v=[123 456], next=}",
 		},
 		{
 			name:    "Parser: rep_sc",
 			input:   "123,456",
 			p:       RepSc(Tok(Ident)),
 			success: true,
-			result:  "{v=[], toks=<num>/123🍌<num>/456}",
+			result:  "{v=[], next=<num>/123🍌<num>/456}",
 		},
 		{
 			name:    "Parser: repr",
 			input:   "123,456",
 			p:       RepR(Tok(Number)),
 			success: true,
-			result:  "{v=[], toks=<num>/123🍌<num>/456}🍊{v=[123], toks=<num>/456}🍊{v=[123 456], toks=}",
+			result:  "{v=[], next=<num>/123🍌<num>/456}🍊{v=[123], next=<num>/456}🍊{v=[123 456], next=}",
 		},
 		{
 			name:    "Parser: rep",
 			input:   "123,456",
 			p:       Rep(Tok(Number)),
 			success: true,
-			result:  "{v=[123 456], toks=}🍊{v=[123], toks=<num>/456}🍊{v=[], toks=<num>/123🍌<num>/456}",
+			result:  "{v=[123 456], next=}🍊{v=[123], next=<num>/456}🍊{v=[], next=<num>/123🍌<num>/456}",
 		},
 		{
 			name:  "Parser: apply",
@@ -166,7 +166,7 @@ func TestParser(t *testing.T) {
 				return strings.Join(xs, ";")
 			}),
 			success: true,
-			result:  "{v=, toks=<num>/123🍌<num>/456}🍊{v=123, toks=<num>/456}🍊{v=123;456, toks=}",
+			result:  "{v=, next=<num>/123🍌<num>/456}🍊{v=123, next=<num>/456}🍊{v=123;456, next=}",
 		},
 		{
 			name:  "Parser: errd",
@@ -176,7 +176,7 @@ func TestParser(t *testing.T) {
 				return num
 			}), "This is not a number!", 42),
 			success: true,
-			result:  "{v=42, toks=<id>/a}",
+			result:  "{v=42, next=<id>/a}",
 			error:   "This is not a number! in pos 1-2 line 1 col 1",
 		},
 	} {
@@ -262,28 +262,28 @@ func TestAmbParser(t *testing.T) {
 			input:   "1",
 			p:       EXPR,
 			success: true,
-			result:  "{v=1, toks=}",
+			result:  "{v=1, next=}",
 		},
 		{
 			name:    "Parser: amb, +1",
 			input:   "+1",
 			p:       EXPR,
 			success: true,
-			result:  "{v=(+ 1), toks=}",
+			result:  "{v=(+ 1), next=}",
 		},
 		{
 			name:    "Parser: amb, 1+2",
 			input:   "1+2",
 			p:       EXPR,
 			success: true,
-			result:  "{v=[(1 . (+ 2)), (1 + 2)], toks=}",
+			result:  "{v=[(1 . (+ 2)), (1 + 2)], next=}",
 		},
 		{
 			name:    "Parser: amb, 1+2+3",
 			input:   "1+2+3",
 			p:       EXPR,
 			success: true,
-			result:  "{v=[(1 . (+ [(2 . (+ 3)), (2 + 3)])), (1 + [(2 . (+ 3)), (2 + 3)])], toks=}",
+			result:  "{v=[(1 . (+ [(2 . (+ 3)), (2 + 3)])), (1 + [(2 . (+ 3)), (2 + 3)])], next=}",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -367,7 +367,7 @@ func TestFailure(t *testing.T) {
 			input:   "1a 2b 3c d e",
 			p:       RepSc(Seq(Tok(Number), Tok(Ident))),
 			success: true,
-			result:  "{v=[[1 a] [2 b] [3 c]], toks=<id>/d🍌<id>/e}",
+			result:  "{v=[[1 a] [2 b] [3 c]], next=<id>/d🍌<id>/e}",
 			error:   "Unable to consume token `d` in pos 10-11 line 1 col 10",
 		},
 		{
@@ -375,7 +375,7 @@ func TestFailure(t *testing.T) {
 			input:   "1a 2b 3c d e",
 			p:       Rep(Seq(Tok(Number), Tok(Ident))),
 			success: true,
-			result:  "{v=[[1 a] [2 b] [3 c]], toks=<id>/d🍌<id>/e}🍊{v=[[1 a] [2 b]], toks=<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[[1 a]], toks=<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[], toks=<num>/1🍌<id>/a🍌<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}",
+			result:  "{v=[[1 a] [2 b] [3 c]], next=<id>/d🍌<id>/e}🍊{v=[[1 a] [2 b]], next=<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[[1 a]], next=<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[], next=<num>/1🍌<id>/a🍌<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}",
 			// 返回最远的错误
 			error: "Unable to consume token `d` in pos 10-11 line 1 col 10",
 		},
@@ -384,7 +384,7 @@ func TestFailure(t *testing.T) {
 			input:   "1 a b 2 c 3",
 			p:       RepSc(Alt(Tok(Number), Seq(Tok(Ident), Tok(Ident)))),
 			success: true,
-			result:  "{v=[1 [a b] 2], toks=<id>/c🍌<num>/3}",
+			result:  "{v=[1 [a b] 2], next=<id>/c🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
 			error: "Unable to consume token `3` in pos 11-12 line 1 col 11",
 		},
@@ -393,7 +393,7 @@ func TestFailure(t *testing.T) {
 			input:   "1 a b 2 c 3",
 			p:       Rep(Alt(Tok(Number), Seq(Tok(Ident), Tok(Ident)))),
 			success: true,
-			result:  "{v=[1 [a b] 2], toks=<id>/c🍌<num>/3}🍊{v=[1 [a b]], toks=<num>/2🍌<id>/c🍌<num>/3}🍊{v=[1], toks=<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}🍊{v=[], toks=<num>/1🍌<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}",
+			result:  "{v=[1 [a b] 2], next=<id>/c🍌<num>/3}🍊{v=[1 [a b]], next=<num>/2🍌<id>/c🍌<num>/3}🍊{v=[1], next=<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}🍊{v=[], next=<num>/1🍌<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
 			error: "Unable to consume token `3` in pos 11-12 line 1 col 11",
 		},
@@ -402,7 +402,7 @@ func TestFailure(t *testing.T) {
 			input:   "a b c d e f g 3",
 			p:       RepSc(OptSc(Seq(Tok(Ident), Tok(Ident)))),
 			success: true,
-			result:  "{v=[[a b] [c d] [e f]], toks=<id>/g🍌<num>/3}",
+			result:  "{v=[[a b] [c d] [e f]], next=<id>/g🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
 			error: "Unable to consume token `3` in pos 15-16 line 1 col 15",
 		},
@@ -411,7 +411,7 @@ func TestFailure(t *testing.T) {
 			input:   "a b c d e f g 3",
 			p:       Rep(OptSc(Seq(Tok(Ident), Tok(Ident)))),
 			success: true,
-			result:  "{v=[[a b] [c d] [e f]], toks=<id>/g🍌<num>/3}🍊{v=[[a b] [c d]], toks=<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[[a b]], toks=<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[], toks=<id>/a🍌<id>/b🍌<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}",
+			result:  "{v=[[a b] [c d] [e f]], next=<id>/g🍌<num>/3}🍊{v=[[a b] [c d]], next=<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[[a b]], next=<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[], next=<id>/a🍌<id>/b🍌<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
 			error: "Unable to consume token `3` in pos 15-16 line 1 col 15",
 		},
@@ -462,7 +462,7 @@ func succeed(out Output) []Result {
 func fmtResults(results []Result) string {
 	xs := make([]string, len(results))
 	for i, r := range results {
-		xs[i] = fmt.Sprintf("{v=%v, toks=%s}", r.Val, fmtToks(r.toks))
+		xs[i] = fmt.Sprintf("{v=%v, next=%s}", r.Val, fmtToks(r.next))
 	}
 	return strings.Join(xs, "🍊")
 }

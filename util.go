@@ -5,18 +5,6 @@ import (
 )
 
 // ----------------------------------------------------------------
-// Parser Impl
-// ----------------------------------------------------------------
-
-type parser struct {
-	parse func([]*lexer.Token) Output
-}
-
-func newParser(p func([]*lexer.Token) Output) Parser           { return &parser{p} }
-func (p *parser) Parse(toks []*lexer.Token) Output             { return p.parse(toks) }
-func (p *parser) Map(f func(v interface{}) interface{}) Parser { return Apply(p, f) }
-
-// ----------------------------------------------------------------
 // tokSeq
 // ----------------------------------------------------------------
 

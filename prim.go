@@ -9,13 +9,13 @@ import (
 // ----------------------------------------------------------------
 
 func Nil() Parser {
-	return newParser(func(toks []*lexer.Token) Output {
-		return success([]Result{{toks: toks}})
+	return parser(func(toks []*lexer.Token) Output {
+		return success([]Result{{next: toks}})
 	})
 }
 
 func Str(toMatch string) Parser {
-	return newParser(func(toks []*lexer.Token) Output {
+	return parser(func(toks []*lexer.Token) Output {
 		if len(toks) == 0 {
 			return fail(unableToConsumeToken(eof))
 		}
@@ -28,7 +28,7 @@ func Str(toMatch string) Parser {
 }
 
 func Tok(toMatch lexer.TokenKind) Parser {
-	return newParser(func(toks []*lexer.Token) Output {
+	return parser(func(toks []*lexer.Token) Output {
 		if len(toks) == 0 {
 			return fail(unableToConsumeToken(eof))
 		}

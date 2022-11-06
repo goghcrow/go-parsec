@@ -20,8 +20,14 @@ type SyntaxRule struct {
 	Pattern Parser
 }
 
-func (i *SyntaxRule) Parse(toks []*lexer.Token) Output             { return i.Pattern.Parse(toks) }
-func (i *SyntaxRule) Map(f func(v interface{}) interface{}) Parser { return Apply(i, f) }
+func (r *SyntaxRule) Parse(toks []*lexer.Token) Output             { return r.Pattern.Parse(toks) }
+func (r *SyntaxRule) Map(f func(v interface{}) interface{}) Parser { return Apply(r, f) }
+
+// Parser Impl
+type parser func([]*lexer.Token) Output
+
+func (p parser) Parse(toks []*lexer.Token) Output             { return p(toks) }
+func (p parser) Map(f func(v interface{}) interface{}) Parser { return Apply(p, f) }
 
 // Output
 // If successful===true, it means that the candidates field is valid, even when it is empty.
@@ -35,7 +41,7 @@ type Output struct {
 
 type Result struct {
 	Val  interface{}
-	toks tokSeq // rest of tokens
+	next tokSeq // rest of tokens
 }
 
 type Error struct {
@@ -56,12 +62,12 @@ func ExpectEOF(out Output) Output {
 	var xs []Result
 	err := out.Error
 	for _, candidate := range out.Candidates {
-		if len(candidate.toks) == 0 {
+		if len(candidate.next) == 0 {
 			xs = append(xs, candidate)
 		} else {
-			err = betterError(err, newError(candidate.toks.loc(),
+			err = betterError(err, newError(candidate.next.loc(),
 				fmt.Sprintf("The parser cannot reach the end of file, stops %s in %s",
-					candidate.toks[0], candidate.toks[0].Loc)))
+					candidate.next[0], candidate.next[0].Loc)))
 		}
 	}
 	return newOutput(xs, err, len(xs) != 0)

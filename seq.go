@@ -11,11 +11,11 @@ import (
 // Seq :: p[a] -> p[b] -> p[c] -> ... -> p[(a,b,c...)]
 // 对 ps 进行 foldLeft, append 收集数据
 func Seq(ps ...Parser) Parser {
-	return newParser(func(toks []*lexer.Token) Output {
+	return parser(func(toks []*lexer.Token) Output {
 		var err *Error
 		// 层序遍历, ps 代表层次(每层使用的 p), 每层更新结果(从 root 到该层节点的路径),
 		// 返回根节点到所有叶子节点的路径
-		xs := []Result{{Val: anySlice(), toks: toks}} // root
+		xs := []Result{{Val: anySlice(), next: toks}} // root
 		for _, p := range ps {
 			if len(xs) == 0 { // 快速失败
 				break
@@ -24,13 +24,13 @@ func Seq(ps ...Parser) Parser {
 			steps := xs
 			xs = []Result{}
 			for _, step := range steps {
-				out := p.Parse(step.toks)
+				out := p.Parse(step.next)
 				err = betterError(err, out.Error)
 				if out.Success {
 					for _, candidate := range out.Candidates {
 						xs = append(xs, Result{
 							Val:  append(step.Val.([]interface{}), candidate.Val),
-							toks: candidate.toks,
+							next: candidate.next,
 						})
 					}
 				}

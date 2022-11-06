@@ -11,7 +11,7 @@ import (
 // Amb :: p[a] -> p[list[a]]
 // Consumes x and merge group result by consumed tokens.
 func Amb(p Parser) Parser {
-	return newParser(func(toks []*lexer.Token) Output {
+	return parser(func(toks []*lexer.Token) Output {
 		branches := p.Parse(toks)
 		if !branches.Success {
 			return branches
@@ -19,7 +19,7 @@ func Amb(p Parser) Parser {
 
 		group := make(map[*lexer.Token][]Result)
 		for _, r := range branches.Candidates {
-			k := r.toks.mapKey()
+			k := r.next.mapKey()
 			group[k] = append(group[k], r)
 		}
 
@@ -29,7 +29,7 @@ func Amb(p Parser) Parser {
 			for i, v := range vals {
 				merged[i] = v.Val
 			}
-			xs = append(xs, Result{merged, vals[0].toks})
+			xs = append(xs, Result{merged, vals[0].next})
 		}
 		return successWithErr(xs, branches.Error)
 	})
