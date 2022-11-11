@@ -4,7 +4,7 @@ type TokenKind int
 
 type Token struct {
 	TokenKind
-	Loc
+	Pos
 	Lexeme string
 }
 

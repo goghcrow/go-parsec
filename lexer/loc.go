@@ -4,42 +4,42 @@ import (
 	"fmt"
 )
 
-type Location interface {
-	GetLoc() Loc
+type Positionable interface {
+	GetPos() Pos
 }
 
-func (l Loc) GetLoc() Loc { return l }
+func (p Pos) GetPos() Pos { return p }
 
-type Loc struct {
-	Pos    int // include
-	PosEnd int // exclude
+type Pos struct {
+	Idx    int // include
+	IdxEnd int // exclude
 	Col    int
 	Line   int
 }
 
-var UnknownLoc = Loc{-1, -1, -1, -1}
+var UnknownPos = Pos{-1, -1, -1, -1}
 
 // Move Cursor
-func (l *Loc) Move(r rune) {
-	l.Pos++
+func (p *Pos) Move(r rune) {
+	p.Idx++
 	if r == '\n' {
-		l.Line++
-		l.Col = 0
+		p.Line++
+		p.Col = 0
 	} else {
-		l.Col++
+		p.Col++
 	}
 }
 
-func (l Loc) Merge(other Loc) Loc {
-	if other.Pos <= l.Pos {
-		panic("expect right loc")
+func (p Pos) Merge(other Pos) Pos {
+	if other.Idx <= p.Idx {
+		panic("expect right pos")
 	}
-	l.PosEnd = other.PosEnd
-	return l
+	p.IdxEnd = other.IdxEnd
+	return p
 }
 
-func (l Loc) String() string {
-	return fmt.Sprintf("pos %d-%d line %d col %d", l.Pos+1, l.PosEnd+1, l.Line+1, l.Col+1)
+func (p Pos) String() string {
+	return fmt.Sprintf("pos %d-%d line %d col %d", p.Idx+1, p.IdxEnd+1, p.Line+1, p.Col+1)
 }
 
-func (l Loc) Span(runes []rune) string { return string(runes[l.Pos:l.PosEnd]) }
+func (p Pos) Span(runes []rune) string { return string(runes[p.Idx:p.IdxEnd]) }

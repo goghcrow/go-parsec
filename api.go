@@ -45,18 +45,18 @@ type Result struct {
 }
 
 type Error struct {
-	Loc lexer.Loc
+	lexer.Pos
 	Msg string
 }
 
-func (e *Error) Error() string { return fmt.Sprintf("%s in %s", e.Msg, e.Loc) }
+func (e *Error) Error() string { return fmt.Sprintf("%s in %s", e.Msg, e.Pos) }
 
 func ExpectEOF(out Output) Output {
 	if !out.Success {
 		return out
 	}
 	if len(out.Candidates) == 0 {
-		return fail(newError(lexer.UnknownLoc, "No result is returned."))
+		return fail(newError(lexer.UnknownPos, "No result is returned."))
 	}
 
 	var xs []Result
@@ -65,9 +65,9 @@ func ExpectEOF(out Output) Output {
 		if len(candidate.next) == 0 {
 			xs = append(xs, candidate)
 		} else {
-			err = betterError(err, newError(candidate.next.loc(),
+			err = betterError(err, newError(candidate.next.pos(),
 				fmt.Sprintf("The parser cannot reach the end of file, stops %s in %s",
-					candidate.next[0], candidate.next[0].Loc)))
+					candidate.next[0], candidate.next[0].Pos)))
 		}
 	}
 	return newOutput(xs, err, len(xs) != 0)
@@ -75,14 +75,14 @@ func ExpectEOF(out Output) Output {
 
 func ExpectSingleResult(out Output) (interface{}, error) {
 	if !out.Success {
-		// return Result{}, newError(lexer.UnknownLoc, out.Error.Error())
+		// return Result{}, newError(lexer.UnknownPos, out.Error.Error())
 		return Result{}, out.Error
 	}
 	if len(out.Candidates) == 0 {
-		return Result{}, newError(lexer.UnknownLoc, "No result is returned.")
+		return Result{}, newError(lexer.UnknownPos, "No result is returned.")
 	}
 	if len(out.Candidates) != 1 {
-		return Result{}, newError(lexer.UnknownLoc, "Multiple results are returned.")
+		return Result{}, newError(lexer.UnknownPos, "Multiple results are returned.")
 	}
 	return out.Candidates[0].Val, nil
 }

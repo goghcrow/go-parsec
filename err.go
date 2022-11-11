@@ -16,7 +16,7 @@ func Err(p Parser, msg string) Parser {
 		if branches.Success {
 			return branches
 		}
-		return fail(newError(branches.Loc, msg))
+		return fail(newError(branches.Pos, msg))
 	})
 }
 
@@ -29,6 +29,6 @@ func ErrDef(p Parser, msg string, def interface{}) Parser {
 		if branches.Success {
 			return branches
 		}
-		return successWithErr([]Result{{def, toks}}, newError(branches.Loc, msg))
+		return successWithErr([]Result{{def, toks}}, newError(branches.Pos, msg))
 	})
 }

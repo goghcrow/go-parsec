@@ -18,11 +18,11 @@ func (t tokSeq) mapKey() *lexer.Token {
 	}
 }
 
-func (t tokSeq) loc() lexer.Loc {
+func (t tokSeq) pos() lexer.Pos {
 	if len(t) == 0 {
-		return lexer.UnknownLoc
+		return lexer.UnknownPos
 	} else {
-		return t[0].Loc
+		return t[0].Pos
 	}
 }
 
@@ -44,15 +44,15 @@ func betterError(e1, e2 *Error) *Error {
 	if e2 == nil {
 		return e1
 	}
-	if e1.Loc == lexer.UnknownLoc { // eof
+	if e1.Pos == lexer.UnknownPos { // eof
 		return e1
 	}
-	if e2.Loc == lexer.UnknownLoc { // eof
+	if e2.Pos == lexer.UnknownPos { // eof
 		return e2
 	}
-	if e1.Loc.Pos < e2.Loc.Pos {
+	if e1.Pos.Idx < e2.Pos.Idx {
 		return e2
-	} else if e1.Loc.Pos > e2.Loc.Pos {
+	} else if e1.Pos.Idx > e2.Pos.Idx {
 		return e1
 	}
 	return e1
@@ -77,10 +77,10 @@ func newOutput(xs []Result, err *Error, success bool) Output {
 // Error
 // ----------------------------------------------------------------
 
-func newError(loc lexer.Loc, msg string) *Error { return &Error{Loc: loc, Msg: msg} }
+func newError(pos lexer.Pos, msg string) *Error { return &Error{Pos: pos, Msg: msg} }
 func unableToConsumeToken(tok *lexer.Token) *Error {
 	return &Error{
-		Loc: tok.Loc,
+		Pos: tok.Pos,
 		Msg: "Unable to consume token `" + tok.String() + "`",
 	}
 }
@@ -91,7 +91,7 @@ func unableToConsumeToken(tok *lexer.Token) *Error {
 
 var eof = &lexer.Token{
 	TokenKind: -1,
-	Loc:       lexer.UnknownLoc,
+	Pos:       lexer.UnknownPos,
 	Lexeme:    "<END-OF-FILE>",
 }
 

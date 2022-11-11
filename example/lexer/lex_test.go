@@ -18,7 +18,7 @@ func TestSimple(t *testing.T) {
 	})
 	toks := lex.MustLex("1, 2,3, 4,5")
 	for _, tok := range toks {
-		t.Logf("%s in %s", tok, tok.Loc)
+		t.Logf("%s in %s", tok, tok.Pos)
 	}
 }
 
@@ -26,6 +26,6 @@ func TestExample(t *testing.T) {
 	lex := NewBuiltinLexer(userDefinedOperators)
 	toks := lex.MustLex("(1 + 2) * 3 < 5 == false")
 	for _, tok := range toks {
-		t.Logf("%s in %s", tok, tok.Loc)
+		t.Logf("%s in %s", tok, tok.Pos)
 	}
 }
