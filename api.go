@@ -2,7 +2,8 @@ package parsec
 
 import (
 	"fmt"
-	"github.com/goghcrow/go-parsec/lexer"
+
+	"github.com/goghcrow/lexer"
 )
 
 // ----------------------------------------------------------------

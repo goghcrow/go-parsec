@@ -1,8 +1,6 @@
 package parsec
 
-import (
-	"github.com/goghcrow/go-parsec/lexer"
-)
+import "github.com/goghcrow/lexer"
 
 // Apply :: p[a] -> (a -> b) -> p[b]
 // 📢 the data structural of v is topological equivalent to syntax structural of p

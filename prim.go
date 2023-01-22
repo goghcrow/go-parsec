@@ -1,8 +1,6 @@
 package parsec
 
-import (
-	"github.com/goghcrow/go-parsec/lexer"
-)
+import "github.com/goghcrow/lexer"
 
 // ----------------------------------------------------------------
 // Token Filters

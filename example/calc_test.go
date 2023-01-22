@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	. "github.com/goghcrow/go-parsec"
-	. "github.com/goghcrow/go-parsec/lexer"
+	"github.com/goghcrow/lexer"
 )
 
 func TestRec(t *testing.T) {
 	const (
-		Number TokenKind = iota + 1
+		Number lexer.TokenKind = iota + 1
 		Add
 		Sub
 		Mul
@@ -20,7 +20,7 @@ func TestRec(t *testing.T) {
 		Space
 	)
 
-	lex := BuildLexer(func(lex *Lexicon) {
+	lex := lexer.BuildLexer(func(lex *lexer.Lexicon) {
 		lex.Regex(Number, `\d+(\.\d+)?`)
 		lex.Oper(Add, "+")
 		lex.Oper(Sub, "-")
@@ -44,11 +44,11 @@ func TestRec(t *testing.T) {
 	}
 
 	applyNum := func(v interface{}) interface{} {
-		return str2num(v.(*Token).Lexeme)
+		return str2num(v.(*lexer.Token).Lexeme)
 	}
 	applyUnary := func(v interface{}) interface{} {
 		xs := v.([]interface{})
-		u := xs[0].(*Token)
+		u := xs[0].(*lexer.Token)
 		rhs := xs[1].(float64)
 		switch u.Lexeme {
 		case "+":
@@ -61,7 +61,7 @@ func TestRec(t *testing.T) {
 	}
 	applyBinary := func(a, b interface{}) interface{} {
 		lhs := a.(interface{}).(float64)
-		oper := b.([]interface{})[0].(*Token)
+		oper := b.([]interface{})[0].(*lexer.Token)
 		rhs := b.([]interface{})[1].(float64)
 		switch oper.Lexeme {
 		case "+":

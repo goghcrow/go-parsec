@@ -2,10 +2,11 @@ package parsec
 
 import (
 	"fmt"
-	"github.com/goghcrow/go-parsec/lexer"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/goghcrow/lexer"
 )
 
 const (
