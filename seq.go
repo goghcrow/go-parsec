@@ -27,7 +27,7 @@ func Seq(ps ...Parser) Parser {
 				if out.Success {
 					for _, candidate := range out.Candidates {
 						xs = append(xs, Result{
-							Val:  append(step.Val.([]interface{}), candidate.Val),
+							Val:  concat(step.Val.([]interface{}), candidate.Val),
 							next: candidate.next,
 						})
 					}

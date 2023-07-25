@@ -103,3 +103,10 @@ func reverse(s []Result) []Result {
 func anySlice() interface{} { return []interface{}{} }
 
 func anyIndex(v interface{}, i int) interface{} { return v.([]interface{})[i] }
+
+func concat(x []interface{}, y ...interface{}) []interface{} {
+	xs := make([]interface{}, len(x)+len(y))
+	copy(xs, x)
+	copy(xs[len(x):], y)
+	return xs
+}

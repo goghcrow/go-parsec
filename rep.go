@@ -38,7 +38,7 @@ func RepSc(p Parser) Parser {
 						// 必须消费掉 token, 重复 nil 死循环
 						if !step.next.equals(candidate.next) {
 							xs = append(xs, Result{
-								Val:  append(step.Val.([]interface{}), candidate.Val),
+								Val:  concat(step.Val.([]interface{}), candidate.Val),
 								next: candidate.next,
 							})
 						}
@@ -71,7 +71,7 @@ func RepR(p Parser) Parser {
 					// 必须消费掉 token, 重复 nil 死循环
 					if !step.next.equals(candidate.next) {
 						xs = append(xs, Result{
-							Val:  append(step.Val.([]interface{}), candidate.Val),
+							Val:  concat(step.Val.([]interface{}), candidate.Val),
 							next: candidate.next,
 						})
 					}
