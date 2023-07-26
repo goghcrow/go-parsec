@@ -4,13 +4,15 @@ import (
 	"strconv"
 	"testing"
 
-	. "github.com/goghcrow/go-parsec"
 	"github.com/goghcrow/lexer"
+	. "github.com/goghcrow/parsec"
 )
+
+func StrOf(toMatch string) Parser[TokenKind, Token[TokenKind]] { return Str[TokenKind](toMatch) }
 
 func TestRec(t *testing.T) {
 	const (
-		Number lexer.TokenKind = iota + 1
+		Number TokenKind = iota + 1
 		Add
 		Sub
 		Mul
@@ -20,7 +22,7 @@ func TestRec(t *testing.T) {
 		Space
 	)
 
-	lex := lexer.BuildLexer(func(lex *lexer.Lexicon) {
+	lex := lexer.BuildLexer(func(lex *lexer.Lexicon[TokenKind]) {
 		lex.Regex(Number, `\d+(\.\d+)?`)
 		lex.Oper(Add, "+")
 		lex.Oper(Sub, "-")
@@ -31,11 +33,9 @@ func TestRec(t *testing.T) {
 		lex.Regex(Space, `\s+`).Skip()
 	})
 
-	TERM := NewRule()
-	FACTOR := NewRule()
-	EXP := NewRule()
+	type Val = float64
 
-	str2num := func(s string) float64 {
+	str2num := func(s string) Val {
 		num, err := strconv.ParseFloat(s, 64)
 		if err != nil {
 			panic(err)
@@ -43,35 +43,30 @@ func TestRec(t *testing.T) {
 		return num
 	}
 
-	applyNum := func(v interface{}) interface{} {
-		return str2num(v.(*lexer.Token).Lexeme)
+	applyNum := func(v Token[TokenKind]) Val {
+		return str2num(v.Lexeme())
 	}
-	applyUnary := func(v interface{}) interface{} {
-		xs := v.([]interface{})
-		u := xs[0].(*lexer.Token)
-		rhs := xs[1].(float64)
-		switch u.Lexeme {
+
+	applyUnary := func(v Cons[Token[TokenKind], Val]) Val {
+		switch v.Car.Lexeme() {
 		case "+":
-			return rhs
+			return v.Cdr
 		case "-":
-			return -rhs
+			return -v.Cdr
 		default:
 			panic("unreached")
 		}
 	}
-	applyBinary := func(a, b interface{}) interface{} {
-		lhs := a.(interface{}).(float64)
-		oper := b.([]interface{})[0].(*lexer.Token)
-		rhs := b.([]interface{})[1].(float64)
-		switch oper.Lexeme {
+	applyBinary := func(a Val, b Cons[Token[TokenKind], Val]) Val {
+		switch b.Car.Lexeme() {
 		case "+":
-			return lhs + rhs
+			return a + b.Cdr
 		case "-":
-			return lhs - rhs
+			return a - b.Cdr
 		case "*":
-			return lhs * rhs
+			return a * b.Cdr
 		case "/":
-			return lhs / rhs
+			return a / b.Cdr
 		default:
 			panic("unreached")
 		}
@@ -87,30 +82,43 @@ func TestRec(t *testing.T) {
 	// EXP
 	//  	= FACTOR
 	//  	= EXP ('+' | '-') FACTOR
+
+	TERM := NewRule[TokenKind, Val]()
+	FACTOR := NewRule[TokenKind, Val]()
+	EXP := NewRule[TokenKind, Val]()
+
+	term := TERM.Parser()
+	factor := FACTOR.Parser()
+	exp := EXP.Parser()
+
 	TERM.Pattern = Alt(
-		Tok(Number).Map(applyNum),
-		Seq(Alt(Str("+"), Str("-")), TERM).Map(applyUnary),
-		KMid(Str("("), EXP, Str(")")),
+		Apply(Tok(Number), applyNum),
+		Apply(Seq2(Alt(StrOf("+"), StrOf("-")), term), applyUnary),
+		KMid(StrOf("("), exp, StrOf(")")),
 	)
 	FACTOR.Pattern = LRecSc(
-		TERM,
-		Seq(Alt(Str("*"), Str("/")), TERM),
+		term,
+		Seq2(Alt(StrOf("*"), StrOf("/")), term),
 		applyBinary,
 	)
 	EXP.Pattern = LRecSc(
-		FACTOR,
-		Seq(Alt(Str("+"), Str("-")), FACTOR),
+		factor,
+		Seq2(Alt(StrOf("+"), StrOf("-")), factor),
 		applyBinary,
 	)
 
-	eval := func(s string) float64 {
-		toks := lex.MustLex(s)
+	eval := func(s string) Val {
+		xs := lex.MustLex(s)
+		toks := make([]Token[TokenKind], len(xs))
+		for i, t := range xs {
+			toks[i] = t
+		}
 		out := EXP.Parse(toks)
 		result, err := ExpectSingleResult(ExpectEOF(out))
 		if err != nil {
 			panic(err)
 		}
-		return result.(float64)
+		return result
 	}
 
 	for _, tt := range []struct {

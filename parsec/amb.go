@@ -1,33 +1,28 @@
 package parsec
 
-import "github.com/goghcrow/lexer"
-
 // ----------------------------------------------------------------
-// Ambiguity Resolving
+// Ambiguity Resolving, 歧义合并器
 // ----------------------------------------------------------------
 
 // Amb :: p[a] -> p[list[a]]
 // Consumes x and merge group result by consumed tokens.
-func Amb(p Parser) Parser {
-	return parser(func(toks []*lexer.Token) Output {
+func Amb[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		branches := p.Parse(toks)
 		if !branches.Success {
-			return branches
+			return failOf[K, R, []R](branches)
 		}
 
-		group := make(map[*lexer.Token][]Result)
+		group := make(map[Token[K]][]Result[K, R])
 		for _, r := range branches.Candidates {
-			k := r.next.mapKey()
+			k := r.next.beginTok()
 			group[k] = append(group[k], r)
 		}
 
-		xs := make([]Result, 0, len(group))
+		xs := make([]Result[K, []R], 0, len(group))
 		for _, vals := range group {
-			merged := make([]interface{}, len(vals))
-			for i, v := range vals {
-				merged[i] = v.Val
-			}
-			xs = append(xs, Result{merged, vals[0].next})
+			merged := sliceMap(vals, func(v Result[K, R]) R { return v.Val })
+			xs = append(xs, Result[K, []R]{merged, vals[0].next})
 		}
 		return successWithErr(xs, branches.Error)
 	})
