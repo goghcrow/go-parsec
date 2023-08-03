@@ -13,8 +13,8 @@ type VirtualPos string
 func (VirtualPos) Loc() (int, int, int, int) { return -1, -1, -1, -1 }
 
 var (
-	UnknownPos = VirtualPos("<unknown>")
-	EOFPos     = VirtualPos("<EOF>")
+	UnknownPos = VirtualPos("unknown")
+	EOFPos     = VirtualPos("end of input")
 )
 
 // ----------------------------------------------------------------
@@ -43,36 +43,4 @@ func EOFToken[K Ord]() Token[K] {
 
 func VirtualToken[K Ord](name string, pos VirtualPos) Token[K] {
 	return virtualToken[K]{pos, name}
-}
-
-// ----------------------------------------------------------------
-// tokSeq
-// ----------------------------------------------------------------
-
-type tokSeq[K Ord] []Token[K]
-
-func (t tokSeq[K]) beginTok() Token[K] {
-	if len(t) == 0 {
-		return nil
-	} else {
-		return t[0]
-	}
-}
-
-func (t tokSeq[K]) beginPos() Pos {
-	if len(t) == 0 {
-		return UnknownPos
-	} else {
-		return t[0]
-	}
-}
-
-func (t tokSeq[K]) equals(other tokSeq[K]) bool {
-	if len(t) == 0 && len(other) == 0 {
-		return true
-	}
-	if len(t) == 0 || len(other) == 0 || t[0] != other[0] {
-		return false
-	}
-	return true
 }

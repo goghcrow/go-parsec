@@ -99,7 +99,7 @@ func unableToConsumeToken[K Ord](tok Token[K], expect string) *Error {
 		pos = vt.VirtualPos
 	}
 	if pos == EOFPos {
-		return newError(pos, "Nothing to consume` expect `"+expect+"`")
+		return newError(pos, "Nothing to consume expect `"+expect+"`")
 	} else {
 		return newError(pos, "Unable to consume token `"+tok.String()+"` expect `"+expect+"`")
 	}
@@ -130,6 +130,32 @@ func betterError(e1, e2 *Error) *Error {
 // ----------------------------------------------------------------
 // Tokens
 // ----------------------------------------------------------------
+
+func beginTok[K Ord](t []Token[K]) Token[K] {
+	if len(t) == 0 {
+		return nil
+	} else {
+		return t[0]
+	}
+}
+
+func beginPos[K Ord](t []Token[K]) Pos {
+	if len(t) == 0 {
+		return UnknownPos
+	} else {
+		return t[0]
+	}
+}
+
+func toksEqual[K Ord](t []Token[K], other []Token[K]) bool {
+	if len(t) == 0 && len(other) == 0 {
+		return true
+	}
+	if len(t) == 0 || len(other) == 0 || t[0] != other[0] {
+		return false
+	}
+	return true
+}
 
 func tokenRange[K Ord](seq []Token[K], nxt Token[K]) []Token[K] {
 	if len(seq) == 0 {

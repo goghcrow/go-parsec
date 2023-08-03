@@ -37,7 +37,7 @@ func ExpectEOF[K Ord, R any](out Output[K, R]) Output[K, R] {
 		if len(candidate.next) == 0 {
 			xs = append(xs, candidate)
 		} else {
-			pso := candidate.next.beginPos()
+			pso := beginPos(candidate.next)
 			msg := fmt.Sprintf("The parser cannot reach the end of file, stops %s in %s",
 				candidate.next[0], Pos(candidate.next[0]))
 			err = betterError(err, newError(pso, msg))

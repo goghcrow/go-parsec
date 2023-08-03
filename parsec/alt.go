@@ -1,11 +1,12 @@
 package parsec
 
 // ----------------------------------------------------------------
-// Alternative
+// Alternative, Choice
 // ----------------------------------------------------------------
 
 // Alt :: p[a] -> p[b] -> p[c] -> ... -> p[a|b|c...]
 // 返回所有可能结果, 当 ps 全部失败时失败
+// foldr (<|>) mzero ps
 func Alt[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		var xs []Result[K, R]
@@ -71,12 +72,8 @@ func Alt5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 	return Alt2(p1, Alt4(p2, p3, p4, p5))
 }
 
-// ----------------------------------------------------------------
-// Alternative Short circuit
-// ----------------------------------------------------------------
-
 // AltSc :: p[a] -> p[b] -> p[c] -> ... -> p[a|b|c...]
-// alt 的短路版本, 返回第一个结果, 当 ps 全部失败时失败
+// 返回第一个结果, 当 ps 全部失败时失败
 func AltSc[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		var err *Error
@@ -144,13 +141,13 @@ func AltSc5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 // ----------------------------------------------------------------
 
 // Opt :: p[a] -> p[a|nil]
-// Alt 返回失败, Opt & OptSc 不返回失败
-func Opt[K Ord, R any](p Parser[K, R]) Parser[K, R] {
+// Alt 返回失败, Opt & OptSc 不返回失败, p 错误不消耗 token
+func Opt[K Ord, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
 	return Alt(p, Nil[K, R]())
 }
 
 // OptSc :: p[a] -> p[a|nil]
 // Opt 返回两种结果, OptSc 返回一种结果, 只有 p 失败才返回 nil
-func OptSc[K Ord, R any](p Parser[K, R]) Parser[K, R] {
+func OptSc[K Ord, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
 	return AltSc(p, Nil[K, R]())
 }

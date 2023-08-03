@@ -33,7 +33,7 @@ func RepSc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 				if out.Success {
 					for _, candidate := range out.Candidates {
 						// 必须消费掉 token, 重复 nil 死循环
-						if !x.next.equals(candidate.next) {
+						if !toksEqual(x.next, candidate.next) {
 							nxs = append(nxs, Result[K, []R]{
 								Val:  concat(x.Val, candidate.Val),
 								next: candidate.next,
@@ -65,7 +65,7 @@ func RepR[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 			if out.Success {
 				for _, candidate := range out.Candidates {
 					// 必须消费掉 token, 重复 nil 死循环
-					if !step.next.equals(candidate.next) {
+					if !toksEqual(step.next, candidate.next) {
 						xs = append(xs, Result[K, []R]{
 							Val:  concat(step.Val, candidate.Val),
 							next: candidate.next,
@@ -79,7 +79,7 @@ func RepR[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 }
 
 // RepN :: p[a] -> int -> p[list[a]]
-// 重复 n 次
+// 即 Count, 重复 n 次
 func RepN[K Ord, R any](p Parser[K, R], cnt int) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		var err *Error

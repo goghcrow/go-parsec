@@ -15,7 +15,7 @@ func Amb[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 
 		group := make(map[Token[K]][]Result[K, R])
 		for _, r := range branches.Candidates {
-			k := r.next.beginTok()
+			k := beginTok(r.next)
 			group[k] = append(group[k], r)
 		}
 

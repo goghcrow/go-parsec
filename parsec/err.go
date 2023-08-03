@@ -6,6 +6,7 @@ package parsec
 
 // Err :: p[a] -> err -> p[a]
 // p 如果失败, 替换错误信息, 提供更准确错误信息
+// e.g. Err(Alt(Tok(Int), Tok(Float)), "expect number")
 func Err[K Ord, R any](p Parser[K, R], msg string) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		branches := p.Parse(toks)

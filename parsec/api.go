@@ -4,10 +4,14 @@ import "fmt"
 
 type Ord = comparable
 
-type Lex[K Ord] func(input string) ([]Token[K], error)
+// type Lex[K Ord] func(input string) ([]Token[K], error)
 
 type Parser[K Ord, R any] interface {
 	Parse([]Token[K]) Output[K, R]
+}
+
+func NewParser[K Ord, R any](p func([]Token[K]) Output[K, R]) Parser[K, R] {
+	return parser[K, R](p)
 }
 
 // Parser Impl
@@ -29,7 +33,7 @@ type Output[K Ord, R any] struct {
 
 type Result[K Ord, R any] struct {
 	Val  R
-	next tokSeq[K] // rest of tokens
+	next []Token[K] // rest of tokens
 }
 
 type Error struct {

@@ -130,6 +130,7 @@ func Combine[K Ord, R any](
 	})
 }
 
+// Combine2 p[a] -> (a->p[b]) -> p[b]
 func Combine2[K Ord, R1, R2 any](
 	p Parser[K, R1],
 	k func(R1) Parser[K, R2],
