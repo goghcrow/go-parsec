@@ -580,6 +580,100 @@ func TestParser(t *testing.T) {
 			result:  "",
 			error:   "Unable to consume token `+` expect `token<1>` in pos 5-6 line 1 col 5",
 		},
+		{
+			name:    "Parser: LookAhead",
+			input:   "123, 456",
+			p:       wrap(LookAhead(Tok(Number))),
+			success: true,
+			result:  "{v=[123], next=<num>/123🍌<num>/456}",
+			error:   "",
+		},
+		{
+			name:    "Parser: LookAhead",
+			input:   "123, 456",
+			p:       wrap(LookAhead(Many(Tok(Number)))),
+			success: true,
+			result:  "{v=[[123 456] [123] []], next=<num>/123🍌<num>/456}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: LookAhead",
+			input:   "123, 456",
+			p:       wrap(LookAhead(Tok(Ident))),
+			success: false,
+			result:  "",
+			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "123, 456",
+			p: wrap(FlatMap(LookAhead(Many(Tok(Number))), func(toks [][]token) Parser[tokKind, [][]token] {
+				// peek !!!
+				return Return[tokKind, [][]token](toks)
+			})),
+			success: true,
+			result:  "{v=[[123 456] [123] []], next=<num>/123🍌<num>/456}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "123, 456",
+			p: wrap(FlatMap(LookAhead(ManySc(Tok(Number))), func(toks [][]token) Parser[tokKind, [][]token] {
+				// peek !!!
+				return Return[tokKind, [][]token](toks)
+			})),
+			success: true,
+			result:  "{v=[[123 456]], next=<num>/123🍌<num>/456}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "123, 456",
+			p: wrap(FlatMap(LookAhead(Tok(Ident)), func(toks []token) Parser[tokKind, []token] {
+				return Return[tokKind, []token](toks)
+			})),
+			success: false,
+			result:  "",
+			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "123, 456",
+			p: wrap(FlatMap(LookAhead(Try(Tok(Ident))), func(toks []token) Parser[tokKind, []token] {
+				return Return[tokKind, []token](toks)
+			})),
+			success: true,
+			result:  "{v=[<nil>], next=<num>/123🍌<num>/456}",
+			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "add,+,123",
+			p: wrap(FlatMap(LookAhead(Tok(Ident)), func(toks []token) Parser[tokKind, Token[tokKind]] {
+				if toks[0].Lexeme() == "add" {
+					return KRight(SkipSc(Tok(Ident)), KRight(Tok(Add), Tok(Number)))
+				} else {
+					return KRight(SkipSc(Tok(Ident)), Tok(Number))
+				}
+			})),
+			success: true,
+			result:  "{v=123, next=}",
+			error:   "",
+		},
+		{
+			name:  "Parser: LookAhead",
+			input: "xxx,123",
+			p: wrap(FlatMap(LookAhead(Tok(Ident)), func(toks []token) Parser[tokKind, Token[tokKind]] {
+				if toks[0].Lexeme() == "add" {
+					return KRight(SkipSc(Tok(Ident)), KRight(Tok(Add), Tok(Number)))
+				} else {
+					return KRight(SkipSc(Tok(Ident)), Tok(Number))
+				}
+			})),
+			success: true,
+			result:  "{v=123, next=}",
+			error:   "",
+		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			toks := mustLex(tt.input)

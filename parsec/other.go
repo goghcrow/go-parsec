@@ -99,6 +99,23 @@ func SkipMany1Sc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 	return KRight(p, SkipManySc(p))
 }
 
+// LookAhead
+// peek p 的值, 如果失败会消费 token, 如果不期望消费可以 LookAhead(Try(p))
+func LookAhead[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
+		out := p.Parse(toks)
+		if !out.Success {
+			return failOf[K, R, []R](out)
+		}
+		xs := make([]R, len(out.Candidates))
+		for i, candidate := range out.Candidates {
+			xs[i] = candidate.Val
+		}
+		res := []Result[K, []R]{{Val: xs, next: toks}}
+		return successWithErr(res, out.Error)
+	})
+}
+
 // NotFollowedBy 只有在 p 匹配失败时才成功, 不消耗 token, 可以用来实现最长匹配
 // 在传统 parsec 中可以用来在识别 keywords,
 // e.g. 识别 let 需要确保关键词后面没有合法的标识符(e.g. lets)
@@ -108,12 +125,11 @@ func SkipMany1Sc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 func NotFollowedBy[K Ord, R any](p Parser[K, R]) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		out := p.Parse(toks)
-		if out.Success {
-			stringify := func(c Result[K, R]) string { return fmt.Sprintf("`%v`", c.Val) }
-			xs := sliceMap(out.Candidates, stringify)
-			return fail[K, R](newError(beginPos(toks), "unexpect "+strings.Join(xs, " or ")))
-		} else {
+		if !out.Success {
 			return success([]Result[K, R]{{next: toks}})
 		}
+		stringify := func(c Result[K, R]) string { return fmt.Sprintf("`%v`", c.Val) }
+		xs := sliceMap(out.Candidates, stringify)
+		return fail[K, R](newError(beginPos(toks), "unexpect "+strings.Join(xs, " or ")))
 	})
 }
