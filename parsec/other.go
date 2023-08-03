@@ -99,6 +99,10 @@ func SkipMany1Sc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 	return KRight(p, SkipManySc(p))
 }
 
+func TrimSc[K Ord, R any](p Parser[K, R], cut Parser[K, R]) Parser[K, R] {
+	return KMid(ManySc(cut), p, ManySc(cut))
+}
+
 // LookAhead
 // peek p 的值, 如果失败会消费 token, 如果不期望消费可以 LookAhead(Try(p))
 func LookAhead[K Ord, R any](p Parser[K, R]) Parser[K, []R] {

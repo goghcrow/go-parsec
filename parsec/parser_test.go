@@ -490,6 +490,38 @@ func TestParser(t *testing.T) {
 			error:   "",
 		},
 		{
+			name:    "Parser: trim_sc",
+			input:   "123,abc,456",
+			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
+			success: true,
+			result:  "{v=abc, next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: trim_sc",
+			input:   "123,456,abc,456,789",
+			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
+			success: true,
+			result:  "{v=abc, next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: trim_sc",
+			input:   "abc,456",
+			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
+			success: true,
+			result:  "{v=abc, next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: trim_sc",
+			input:   "123, abc",
+			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
+			success: true,
+			result:  "{v=abc, next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
 			name:  "Parser: apply",
 			input: "123,456",
 			p: wrap(Apply[tokKind, []token, string](RepR(Tok(Number)), func(toks []token) string {
