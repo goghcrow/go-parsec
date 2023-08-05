@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goghcrow/lexer"
+	"github.com/goghcrow/go-parsec/lexer"
 )
 
 type tokKind = int

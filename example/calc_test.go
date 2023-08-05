@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/goghcrow/lexer"
-	. "github.com/goghcrow/parsec"
+	"github.com/goghcrow/go-parsec/lexer"
+	. "github.com/goghcrow/go-parsec/parsec"
 )
 
 func StrOf(toMatch string) Parser[TokenKind, Token[TokenKind]] { return Str[TokenKind](toMatch) }

@@ -1,6 +1,6 @@
 package example
 
-import "github.com/goghcrow/lexer"
+import "github.com/goghcrow/go-parsec/lexer"
 
 //goland:noinspection GoSnakeCaseUsage
 const (

@@ -1,3 +1,3 @@
-module github.com/goghcrow/lexer
+module github.com/goghcrow/go-parsec/lexer
 
-go 1.18
+go 1.19

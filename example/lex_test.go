@@ -3,7 +3,7 @@ package example
 import (
 	"testing"
 
-	"github.com/goghcrow/lexer"
+	"github.com/goghcrow/go-parsec/lexer"
 )
 
 func TestSimple(t *testing.T) {

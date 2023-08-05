@@ -1,3 +1,3 @@
-module github.com/goghcrow/parsec
+module github.com/goghcrow/go-parsec/parsec
 
 go 1.19

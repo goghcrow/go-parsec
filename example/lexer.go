@@ -1,6 +1,6 @@
 package example
 
-import "github.com/goghcrow/lexer"
+import "github.com/goghcrow/go-parsec/lexer"
 
 func NewBuiltinLexer(udOpers []lexer.Operator[TokenKind]) *lexer.Lexer[TokenKind] {
 	return &lexer.Lexer[TokenKind]{

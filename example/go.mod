@@ -1,3 +1,3 @@
-module github.com/goghcrow/parsec/example
+module github.com/goghcrow/go-parsec/example
 
-go 1.18
+go 1.19
