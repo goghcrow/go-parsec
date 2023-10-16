@@ -9,6 +9,8 @@ import (
 // Alias & Other Combinators
 // ----------------------------------------------------------------
 
+// 在 ts 版本基础上, 扩展了部分新的 combinator
+
 func Unit[K Ord, R any](v R) Parser[K, R]   { return Succ[K, R](v) }
 func Return[K Ord, R any](v R) Parser[K, R] { return Succ[K, R](v) }
 
@@ -99,8 +101,41 @@ func SkipMany1Sc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 	return KRight(p, SkipManySc(p))
 }
 
-func TrimSc[K Ord, R any](p Parser[K, R], cut Parser[K, R]) Parser[K, R] {
+func Trim[K Ord, C, R any](p Parser[K, R], cut Parser[K, C]) Parser[K, R] {
+	return KMid(Many(cut), p, Many(cut))
+}
+func TrimSc[K Ord, C, R any](p Parser[K, R], cut Parser[K, C]) Parser[K, R] {
 	return KMid(ManySc(cut), p, ManySc(cut))
+}
+
+// TODO ListSc ListN List
+
+// SepBy p 被 sep 分隔的 >=0 个 p, 不以 seq 结尾
+// sepBy1 p sep <|> return []
+func SepBy[K Ord, S, R any](p Parser[K, R], sep Parser[K, S]) Parser[K, []R] {
+	return Alt(SepBy1(p, sep), Nil[K, []R]())
+}
+
+// SepBy1 p 被 sep 分隔的 >=1 个 p, 不以 seq 结尾
+// do{ x <- p; xs <- many (sep >> p); return (x:xs) }
+func SepBy1[K Ord, S, R any](p Parser[K, R], sep Parser[K, S]) Parser[K, []R] {
+	return Apply(Seq2(p, Many(KRight(sep, p))), func(v Cons[R, []R]) []R {
+		return append([]R{v.Car}, v.Cdr...)
+	})
+}
+
+// SepBySc p 被 sep 分隔的 >=0 个 p, 不以 seq 结尾
+// sepBy1 p sep <|> return []
+func SepBySc[K Ord, S, R any](p Parser[K, R], sep Parser[K, S]) Parser[K, []R] {
+	return ErrD(SepBy1Sc(p, sep), "", []R{})
+}
+
+// SepBy1Sc p 被 sep 分隔的 >=1 个 p, 不以 seq 结尾
+// do{ x <- p; xs <- many (sep >> p); return (x:xs) }
+func SepBy1Sc[K Ord, S, R any](p Parser[K, R], sep Parser[K, S]) Parser[K, []R] {
+	return Apply(Seq2(p, ManySc(KRight(sep, p))), func(v Cons[R, []R]) []R {
+		return append([]R{v.Car}, v.Cdr...)
+	})
 }
 
 // LookAhead

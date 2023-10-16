@@ -63,6 +63,7 @@ func mustLexForCombinator(s string) []Token[tokKind] {
 }
 
 func TestParser(t *testing.T) {
+	t.Parallel()
 	for _, tt := range []struct {
 		name    string
 		input   string
@@ -520,6 +521,110 @@ func TestParser(t *testing.T) {
 			success: true,
 			result:  "{v=abc, next=}",
 			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: trim_sc",
+			input:   "1 2 3",
+			p:       wrap(Trim(Tok(Number), Tok(Number))),
+			success: true,
+			result:  "{v=3, next=}🍊{v=2, next=}🍊{v=2, next=<num>/3}🍊{v=1, next=}🍊{v=1, next=<num>/3}🍊{v=1, next=<num>/2🍌<num>/3}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy",
+			input:   "",
+			p:       wrap(SepBy(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[], next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy",
+			input:   "123",
+			p:       wrap(SepBy(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123], next=}🍊{v=[], next=<num>/123}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy",
+			input:   "123 + 456 + 789",
+			p:       wrap(SepBy(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=+/+🍌<num>/789}🍊{v=[123], next=+/+🍌<num>/456🍌+/+🍌<num>/789}🍊{v=[], next=<num>/123🍌+/+🍌<num>/456🍌+/+🍌<num>/789}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBySc",
+			input:   "",
+			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[], next=}",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: SepBySc",
+			input:   "123",
+			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123], next=}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBySc",
+			input:   "123 + 456 + 789",
+			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123 456 789], next=}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1",
+			input:   "",
+			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
+			success: false,
+			result:  "",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1",
+			input:   "123",
+			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123], next=}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1",
+			input:   "123 + 456 + 789",
+			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=+/+🍌<num>/789}🍊{v=[123], next=+/+🍌<num>/456🍌+/+🍌<num>/789}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1Sc",
+			input:   "",
+			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
+			success: false,
+			result:  "",
+			error:   "Nothing to consume expect `token<1>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1Sc",
+			input:   "123",
+			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123], next=}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
+		},
+		{
+			name:    "Parser: SepBy1Sc",
+			input:   "123 + 456 + 789",
+			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
+			success: true,
+			result:  "{v=[123 456 789], next=}",
+			error:   "Nothing to consume expect `token<2>` in end of input",
 		},
 		{
 			name:  "Parser: apply",

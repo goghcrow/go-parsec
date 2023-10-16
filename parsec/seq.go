@@ -84,8 +84,10 @@ func Seq5[K Ord, R1, R2, R3, R4, R5 any](
 	p4 Parser[K, R4],
 	p5 Parser[K, R5],
 ) Parser[K, Cons[R1, Cons[R2, Cons[R3, Cons[R4, R5]]]]] {
-	p2345 := Seq2(p2, Seq2(p3, Seq2(p4, p5)))
-	return Seq2(p1, p2345)
+	// tmp vars making goland happy !
+	tl := Seq2(p2, Seq2(p3, Seq2(p4, p5)))
+	var p = Seq2(p1, tl)
+	return p
 }
 
 // ----------------------------------------------------------------

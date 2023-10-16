@@ -13,6 +13,9 @@ func Err[K Ord, R any](p Parser[K, R], msg string) Parser[K, R] {
 		if branches.Success {
 			return branches
 		}
+		if msg == "" {
+			msg = branches.Msg
+		}
 		return fail[K, R](newError(branches.Pos, msg))
 	})
 }
@@ -24,6 +27,9 @@ func ErrD[K Ord, R any](p Parser[K, R], msg string, defaultValue R) Parser[K, R]
 		branches := p.Parse(toks)
 		if branches.Success {
 			return branches
+		}
+		if msg == "" {
+			msg = branches.Msg
 		}
 		return successWithErr(
 			[]Result[K, R]{{Val: defaultValue, next: toks}},
