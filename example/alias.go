@@ -1,3 +1,3 @@
 package example
 
-type TokenKind = int
+type TokenKind int

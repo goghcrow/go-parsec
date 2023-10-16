@@ -6,7 +6,7 @@ package parsec
 
 // Seq :: p[a] -> p[b] -> p[c] -> ... -> p[(a,b,c...)]
 // 顺次匹配, 对 ps 进行 foldLeft, append 收集数据
-func Seq[K Ord, R any](ps ...Parser[K, R]) Parser[K, []R] {
+func Seq[K TK, R any](ps ...Parser[K, R]) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		var err *Error
 		// 层序遍历, ps 代表层次(每层使用的 p), 每层更新结果(从 root 到该层节点的路径),
@@ -35,7 +35,7 @@ func Seq[K Ord, R any](ps ...Parser[K, R]) Parser[K, []R] {
 	})
 }
 
-func Seq2[K Ord, R1, R2 any](
+func Seq2[K TK, R1, R2 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 ) Parser[K, Cons[R1, R2]] {
@@ -61,14 +61,14 @@ func Seq2[K Ord, R1, R2 any](
 		return newOutput(xs, err, len(xs) != 0)
 	})
 }
-func Seq3[K Ord, R1, R2, R3 any](
+func Seq3[K TK, R1, R2, R3 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 	p3 Parser[K, R3],
 ) Parser[K, Cons[R1, Cons[R2, R3]]] {
 	return Seq2(p1, Seq2(p2, p3))
 }
-func Seq4[K Ord, R1, R2, R3, R4 any](
+func Seq4[K TK, R1, R2, R3, R4 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 	p3 Parser[K, R3],
@@ -77,7 +77,7 @@ func Seq4[K Ord, R1, R2, R3, R4 any](
 	var p = Seq2(p1, Seq2(p2, Seq2(p3, p4)))
 	return p
 }
-func Seq5[K Ord, R1, R2, R3, R4, R5 any](
+func Seq5[K TK, R1, R2, R3, R4, R5 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 	p3 Parser[K, R3],
@@ -100,7 +100,7 @@ func Seq5[K Ord, R1, R2, R3, R4, R5 any](
 // 因为 Monad 是 context sensitive 所以可以通过 combine 可以处理 CSG,
 // 其他函数只能处理 CFG, 这个写的挺好的
 // https://stackoverflow.com/questions/7861903/what-are-the-benefits-of-applicative-parsing-over-monadic-parsing
-func Combine[K Ord, R any](
+func Combine[K TK, R any](
 	p Parser[K, R],
 	ks ...func(R) Parser[K, R], // continuations
 ) Parser[K, R] {
@@ -133,7 +133,7 @@ func Combine[K Ord, R any](
 }
 
 // Combine2 p[a] -> (a->p[b]) -> p[b]
-func Combine2[K Ord, R1, R2 any](
+func Combine2[K TK, R1, R2 any](
 	p Parser[K, R1],
 	k func(R1) Parser[K, R2],
 ) Parser[K, R2] {
@@ -156,7 +156,7 @@ func Combine2[K Ord, R1, R2 any](
 		return newOutput(xs, err, len(xs) != 0)
 	})
 }
-func Combine3[K Ord, R1, R2, R3 any](
+func Combine3[K TK, R1, R2, R3 any](
 	p Parser[K, R1],
 	k1 func(R1) Parser[K, R2],
 	k2 func(R2) Parser[K, R3],
@@ -165,7 +165,7 @@ func Combine3[K Ord, R1, R2, R3 any](
 		return Combine2(Combine2(p, k1), k2).Parse(toks)
 	})
 }
-func Combine4[K Ord, R1, R2, R3, R4 any](
+func Combine4[K TK, R1, R2, R3, R4 any](
 	p Parser[K, R1],
 	k1 func(R1) Parser[K, R2],
 	k2 func(R2) Parser[K, R3],
@@ -175,7 +175,7 @@ func Combine4[K Ord, R1, R2, R3, R4 any](
 		return Combine2(Combine3(p, k1, k2), k3).Parse(toks)
 	})
 }
-func Combine5[K Ord, R1, R2, R3, R4, R5 any](
+func Combine5[K TK, R1, R2, R3, R4, R5 any](
 	p Parser[K, R1],
 	k1 func(R1) Parser[K, R2],
 	k2 func(R2) Parser[K, R3],
@@ -192,7 +192,7 @@ func Combine5[K Ord, R1, R2, R3, R4, R5 any](
 // ----------------------------------------------------------------
 
 // KLeft :: p[a] -> p[b] -> p[a]
-func KLeft[K Ord, A, B any](
+func KLeft[K TK, A, B any](
 	p1 Parser[K, A],
 	p2 Parser[K, B],
 ) Parser[K, A] {
@@ -200,7 +200,7 @@ func KLeft[K Ord, A, B any](
 }
 
 // KRight :: p[a] -> p[b] -> p[b]
-func KRight[K Ord, A, B any](
+func KRight[K TK, A, B any](
 	p1 Parser[K, A],
 	p2 Parser[K, B],
 ) Parser[K, B] {
@@ -208,7 +208,7 @@ func KRight[K Ord, A, B any](
 }
 
 // KMid :: p[a] -> p[b] -> p[c] -> p[b]
-func KMid[K Ord, A, B, C any](
+func KMid[K TK, A, B, C any](
 	p1 Parser[K, A],
 	p2 Parser[K, B],
 	p3 Parser[K, C],

@@ -54,16 +54,16 @@ func None[T any]() Option[T]    { return Option[T]{} }
 // Output
 // ----------------------------------------------------------------
 
-func fail[K Ord, R any](err *Error) Output[K, R] {
+func fail[K TK, R any](err *Error) Output[K, R] {
 	return Output[K, R]{Success: false, Error: err}
 }
-func success[K Ord, R any](xs []Result[K, R]) Output[K, R] {
+func success[K TK, R any](xs []Result[K, R]) Output[K, R] {
 	return Output[K, R]{Success: true, Candidates: xs}
 }
-func successWithErr[K Ord, R any](xs []Result[K, R], err *Error) Output[K, R] {
+func successWithErr[K TK, R any](xs []Result[K, R], err *Error) Output[K, R] {
 	return Output[K, R]{true, xs, err}
 }
-func newOutput[K Ord, R any](xs []Result[K, R], err *Error, success bool) Output[K, R] {
+func newOutput[K TK, R any](xs []Result[K, R], err *Error, success bool) Output[K, R] {
 	if success {
 		return successWithErr(xs, err)
 	} else {
@@ -71,7 +71,7 @@ func newOutput[K Ord, R any](xs []Result[K, R], err *Error, success bool) Output
 	}
 }
 
-func resultOf[K Ord, TFrom, TTo any](f func(TFrom) TTo) func(from Result[K, TFrom]) Result[K, TTo] {
+func resultOf[K TK, TFrom, TTo any](f func(TFrom) TTo) func(from Result[K, TFrom]) Result[K, TTo] {
 	return func(from Result[K, TFrom]) Result[K, TTo] {
 		return Result[K, TTo]{
 			Val:  f(from.Val),
@@ -79,7 +79,7 @@ func resultOf[K Ord, TFrom, TTo any](f func(TFrom) TTo) func(from Result[K, TFro
 		}
 	}
 }
-func failOf[K Ord, TFrom, TTo any](from Output[K, TFrom]) Output[K, TTo] {
+func failOf[K TK, TFrom, TTo any](from Output[K, TFrom]) Output[K, TTo] {
 	return Output[K, TTo]{
 		Success: false,
 		Error:   from.Error,
@@ -93,7 +93,7 @@ func failOf[K Ord, TFrom, TTo any](from Output[K, TFrom]) Output[K, TTo] {
 func newError(pos Pos, msg string) *Error {
 	return &Error{Pos: pos, Msg: msg}
 }
-func unableToConsumeToken[K Ord](tok Token[K], expect string) *Error {
+func unableToConsumeToken[K TK](tok Token[K], expect string) *Error {
 	var pos Pos = tok
 	if vt, ok := tok.(virtualToken[K]); ok {
 		pos = vt.VirtualPos
@@ -131,7 +131,7 @@ func betterError(e1, e2 *Error) *Error {
 // Tokens
 // ----------------------------------------------------------------
 
-func beginTok[K Ord](t []Token[K]) Token[K] {
+func beginTok[K TK](t []Token[K]) Token[K] {
 	if len(t) == 0 {
 		return nil
 	} else {
@@ -139,7 +139,7 @@ func beginTok[K Ord](t []Token[K]) Token[K] {
 	}
 }
 
-func beginPos[K Ord](t []Token[K]) Pos {
+func beginPos[K TK](t []Token[K]) Pos {
 	if len(t) == 0 {
 		return UnknownPos
 	} else {
@@ -147,7 +147,7 @@ func beginPos[K Ord](t []Token[K]) Pos {
 	}
 }
 
-func toksEqual[K Ord](t []Token[K], other []Token[K]) bool {
+func toksEqual[K TK](t []Token[K], other []Token[K]) bool {
 	if len(t) == 0 && len(other) == 0 {
 		return true
 	}
@@ -157,7 +157,7 @@ func toksEqual[K Ord](t []Token[K], other []Token[K]) bool {
 	return true
 }
 
-func tokenRange[K Ord](seq []Token[K], nxt Token[K]) []Token[K] {
+func tokenRange[K TK](seq []Token[K], nxt Token[K]) []Token[K] {
 	if len(seq) == 0 {
 		return nil
 	}
@@ -176,7 +176,7 @@ func tokenRange[K Ord](seq []Token[K], nxt Token[K]) []Token[K] {
 // Other
 // ----------------------------------------------------------------
 
-func reverse[K Ord, R any](s []Result[K, R]) []Result[K, R] {
+func reverse[K TK, R any](s []Result[K, R]) []Result[K, R] {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}

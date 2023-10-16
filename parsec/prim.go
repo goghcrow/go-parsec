@@ -8,7 +8,7 @@ import "fmt"
 
 // Nil
 // 不消耗 token, 返回 nil
-func Nil[K Ord, R any]() Parser[K, R] {
+func Nil[K TK, R any]() Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		return success([]Result[K, R]{{next: toks}})
 	})
@@ -16,7 +16,7 @@ func Nil[K Ord, R any]() Parser[K, R] {
 
 // Succ
 // 即 Unit, Return, 不消耗 token, 返回固定值
-func Succ[K Ord, R any](v R) Parser[K, R] {
+func Succ[K TK, R any](v R) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		return success([]Result[K, R]{{Val: v, next: toks}})
 	})
@@ -24,7 +24,7 @@ func Succ[K Ord, R any](v R) Parser[K, R] {
 
 // Fail
 // 不消耗 token, 永远失败
-func Fail[K Ord, R any](msg string) Parser[K, R] {
+func Fail[K TK, R any](msg string) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		var pos Pos = EOFPos
 		if len(toks) != 0 {
@@ -36,7 +36,7 @@ func Fail[K Ord, R any](msg string) Parser[K, R] {
 
 // Any
 // 消耗任意一个 token
-func Any[K Ord]() Parser[K, Token[K]] {
+func Any[K TK]() Parser[K, Token[K]] {
 	return parser[K, Token[K]](func(toks []Token[K]) Output[K, Token[K]] {
 		if len(toks) == 0 {
 			return fail[K, Token[K]](unableToConsumeToken(EOFToken[K](), "any token"))
@@ -47,7 +47,7 @@ func Any[K Ord]() Parser[K, Token[K]] {
 
 // Str
 // 按 文本匹配 token
-func Str[K Ord](toMatch string) Parser[K, Token[K]] {
+func Str[K TK](toMatch string) Parser[K, Token[K]] {
 	return parser[K, Token[K]](func(toks []Token[K]) Output[K, Token[K]] {
 		if len(toks) == 0 {
 			return fail[K, Token[K]](unableToConsumeToken(EOFToken[K](), toMatch))
@@ -61,13 +61,13 @@ func Str[K Ord](toMatch string) Parser[K, Token[K]] {
 
 // Tok
 // 按 TokenKind 匹配 token
-func Tok[K Ord](toMatch K) Parser[K, Token[K]] {
+func Tok[K TK](toMatch K) Parser[K, Token[K]] {
 	return parser[K, Token[K]](func(toks []Token[K]) Output[K, Token[K]] {
 		if len(toks) == 0 {
-			return fail[K, Token[K]](unableToConsumeToken(EOFToken[K](), fmt.Sprintf("token<%v>", toMatch)))
+			return fail[K, Token[K]](unableToConsumeToken(EOFToken[K](), fmt.Sprintf("%v", toMatch)))
 		}
 		if toks[0].Kind() != toMatch {
-			return fail[K, Token[K]](unableToConsumeToken(toks[0], fmt.Sprintf("token<%v>", toMatch)))
+			return fail[K, Token[K]](unableToConsumeToken(toks[0], fmt.Sprintf("%v", toMatch)))
 		}
 		return success([]Result[K, Token[K]]{{Val: toks[0], next: toks[1:]}})
 	})

@@ -6,7 +6,7 @@ package parsec
 
 // Rep :: p[a] -> p[list[a]]
 // 重复 n 次(n>=0), 按路径从长到短返回结果
-func Rep[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+func Rep[K TK, R any](p Parser[K, R]) Parser[K, []R] {
 	repR := RepR[K, R](p)
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		out := repR.Parse(toks)
@@ -20,7 +20,7 @@ func Rep[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 // RepSc :: p[a] -> p[list[a]]
 // 消费尽可能多的 p, 如果零次, 则返回 p[empty_list], 不会失败
 // Rep|RepR 返回所有层的结果, RepSc 返回最深一层结果
-func RepSc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+func RepSc[K TK, R any](p Parser[K, R]) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		var err *Error
 		// 层序遍历, 每层更新结果(从 root 到该层节点的路径), 返回最后一层的结果(根节点到叶子节点路径)
@@ -53,7 +53,7 @@ func RepSc[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 
 // RepR :: p[a] -> p[list[a]]
 // 重复 n 次(n>=0), 按路径从短(empty)到长返回结果
-func RepR[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+func RepR[K TK, R any](p Parser[K, R]) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		var err *Error
 		// 层序遍历, 穷举所有根节点到非根节点的路径, Candidates 为每个节点的分叉数
@@ -80,7 +80,7 @@ func RepR[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
 
 // RepN :: p[a] -> int -> p[list[a]]
 // 即 Count, 重复 n 次
-func RepN[K Ord, R any](p Parser[K, R], cnt int) Parser[K, []R] {
+func RepN[K TK, R any](p Parser[K, R], cnt int) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		var err *Error
 		// 层序遍历, 每层更新结果(从 root 到该层节点的路径), 返回最后一层的结果(根节点到叶子节点路径)
@@ -117,19 +117,19 @@ func RepN[K Ord, R any](p Parser[K, R], cnt int) Parser[K, []R] {
 
 // List :: p[a] -> p[s] -> p[list[a]]
 // 返回所有可能的序列
-func List[K Ord, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
+func List[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
 	return Apply(Seq2(p, Rep(KRight(s, p))), applyList[R, Sep])
 }
 
 // ListSc :: p[a] -> p[s] -> p[list[a]]
 // 返回最长序列
-func ListSc[K Ord, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
+func ListSc[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
 	return Apply(Seq2(p, RepSc(KRight(s, p))), applyList[R, Sep])
 }
 
 // ListN :: p[a] -> p[s] -> int -> p[list[a]]
 // 返回固定数量序列
-func ListN[K Ord, R, Sep any](p Parser[K, R], s Parser[K, Sep], cnt int) Parser[K, []R] {
+func ListN[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep], cnt int) Parser[K, []R] {
 	if cnt < 1 {
 		return Succ[K, []R]([]R{})
 	} else if cnt == 1 {

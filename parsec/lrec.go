@@ -12,7 +12,7 @@ package parsec
 // P  → pP’
 // P’ → qP’|ε
 // pq, pqq, pqqq, ...
-func LRec[K Ord /*Fst extends R,*/, Sec, R any](
+func LRec[K TK /*Fst extends R,*/, Sec, R any](
 	p Parser[K, R],
 	q Parser[K, Sec],
 	f func(R, Sec) R,
@@ -24,7 +24,7 @@ func LRec[K Ord /*Fst extends R,*/, Sec, R any](
 // Equivalent to seq(a, rep_sc(b)))
 // Returns the result of f(f(f(a, b1), b2), b3) .... If no b succeeds, it returns a
 // 只返回一个消费尽可能多 token 的结果
-func LRecSc[K Ord /*Fst extends R,*/, Sec, R any](
+func LRecSc[K TK /*Fst extends R,*/, Sec, R any](
 	p Parser[K, R],
 	q Parser[K, Sec],
 	f func(R, Sec) R,

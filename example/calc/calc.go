@@ -1,28 +1,59 @@
-package example
+package calc
 
 import (
 	"strconv"
-	"testing"
 
 	"github.com/goghcrow/go-parsec/lexer"
 	. "github.com/goghcrow/go-parsec/parsec"
 )
 
-func StrOf(toMatch string) Parser[TokenKind, Token[TokenKind]] { return Str[TokenKind](toMatch) }
+type Val = float64
 
-func TestRec(t *testing.T) {
-	const (
-		Number TokenKind = iota + 1
-		Add
-		Sub
-		Mul
-		Div
-		LParen
-		RParen
-		Space
-	)
+func Calc(s string) Val {
+	xs := lex.MustLex(s)
+	toks := make([]Token[TokenKind], len(xs))
+	for i, t := range xs {
+		toks[i] = t
+	}
+	out := parser.Parse(toks)
+	result, err := ExpectSingleResult(ExpectEOF(out))
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
 
-	lex := lexer.BuildLexer(func(lex *lexer.Lexicon[TokenKind]) {
+type TokenKind int
+
+const (
+	Number TokenKind = iota + 1
+	Add
+	Sub
+	Mul
+	Div
+	LParen
+	RParen
+	Space
+)
+
+func (k TokenKind) String() string {
+	return map[TokenKind]string{
+		Number: "number",
+		Add:    "+",
+		Sub:    "-",
+		Mul:    "*",
+		Div:    "/",
+		LParen: "(",
+		RParen: ")",
+		Space:  "<space>",
+	}[k]
+}
+
+var lex *lexer.Lexer[TokenKind]
+var parser Parser[TokenKind, Val]
+
+func init() {
+	lex = lexer.BuildLexer(func(lex *lexer.Lexicon[TokenKind]) {
 		lex.Regex(Number, `\d+(\.\d+)?`)
 		lex.Oper(Add, "+")
 		lex.Oper(Sub, "-")
@@ -33,7 +64,9 @@ func TestRec(t *testing.T) {
 		lex.Regex(Space, `\s+`).Skip()
 	})
 
-	type Val = float64
+	strOf := func(toMatch string) Parser[TokenKind, Token[TokenKind]] {
+		return Str[TokenKind](toMatch)
+	}
 
 	str2num := func(s string) Val {
 		num, err := strconv.ParseFloat(s, 64)
@@ -93,54 +126,19 @@ func TestRec(t *testing.T) {
 
 	TERM.Pattern = Alt(
 		Apply(Tok(Number), applyNum),
-		Apply(Seq2(Alt(StrOf("+"), StrOf("-")), term), applyUnary),
-		KMid(StrOf("("), exp, StrOf(")")),
+		Apply(Seq2(Alt(strOf("+"), strOf("-")), term), applyUnary),
+		KMid(strOf("("), exp, strOf(")")),
 	)
 	FACTOR.Pattern = LRecSc(
 		term,
-		Seq2(Alt(StrOf("*"), StrOf("/")), term),
+		Seq2(Alt(strOf("*"), strOf("/")), term),
 		applyBinary,
 	)
 	EXP.Pattern = LRecSc(
 		factor,
-		Seq2(Alt(StrOf("+"), StrOf("-")), factor),
+		Seq2(Alt(strOf("+"), strOf("-")), factor),
 		applyBinary,
 	)
 
-	eval := func(s string) Val {
-		xs := lex.MustLex(s)
-		toks := make([]Token[TokenKind], len(xs))
-		for i, t := range xs {
-			toks[i] = t
-		}
-		out := EXP.Parse(toks)
-		result, err := ExpectSingleResult(ExpectEOF(out))
-		if err != nil {
-			panic(err)
-		}
-		return result
-	}
-
-	for _, tt := range []struct {
-		input  string
-		expect float64
-	}{
-		{"1", 1},
-		{"+1.5", 1.5},
-		{"-0.5", -0.5},
-		{"1 + 2", 3},
-		{"1 - 2", -1},
-		{"1 * 2", 2},
-		{"1 / 2", 0.5},
-		{"1 + 2 * 3 + 4", 11},
-		{"(1 + 2) * (3 + 4)", 21},
-		{"1.2--3.4", 4.6},
-	} {
-		t.Run(tt.input, func(t *testing.T) {
-			v := eval(tt.input)
-			if tt.expect != v {
-				t.Errorf("expect %f actual %f", tt.expect, v)
-			}
-		})
-	}
+	parser = EXP
 }

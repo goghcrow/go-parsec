@@ -2,7 +2,7 @@ package parsec
 
 // Apply :: p[a] -> (a -> b) -> p[b]
 // 即 Map, the data structural of v is topological equivalent to syntax structural of p
-func Apply[K Ord, From, To any](
+func Apply[K TK, From, To any](
 	p Parser[K, From],
 	f func(v From) To,
 ) Parser[K, To] {

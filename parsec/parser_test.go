@@ -9,8 +9,18 @@ import (
 	"github.com/goghcrow/go-parsec/lexer"
 )
 
-type tokKind = int
+type tokKind int
 type token = Token[tokKind]
+
+func (k tokKind) String() string {
+	return map[tokKind]string{
+		Number: "<num>",
+		Add:    "+",
+		Space:  "<space>",
+		Ident:  "<id>",
+		Comma:  ",",
+	}[k]
+}
 
 const (
 	Number tokKind = iota + 1
@@ -113,7 +123,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Alt(Tok(Number), Tok(Ident))),
 			success: true,
 			result:  "{v=123, next=<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt",
@@ -121,7 +131,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Alt(Tok(Number), Tok(Ident))),
 			success: true,
 			result:  "{v=abc, next=<id>/def}",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt",
@@ -129,7 +139,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Alt(Alt(Tok(Number), Tok(Ident)), Alt(Tok(Ident), Tok(Number)))),
 			success: true,
 			result:  "{v=123, next=<num>/456}🍊{v=123, next=<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt",
@@ -137,7 +147,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Alt(Alt(Tok(Number), Tok(Ident)), Alt(Tok(Ident), Tok(Number)))),
 			success: true,
 			result:  "{v=abc, next=<id>/def}🍊{v=abc, next=<id>/def}",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: alt",
@@ -147,7 +157,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: true,
 			result:  "{v=123, next=<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt_sc",
@@ -163,7 +173,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(AltSc(Tok(Number), Tok(Ident))),
 			success: true,
 			result:  "{v=abc, next=<id>/def}",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt_sc",
@@ -171,7 +181,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(AltSc(Alt(Tok(Number), Tok(Ident)), Alt(Tok(Ident), Tok(Number)))),
 			success: true,
 			result:  "{v=123, next=<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: alt_sc",
@@ -183,7 +193,7 @@ func TestParser(t *testing.T) {
 			}))),
 			success: true,
 			result:  "{v=alt2: 123, next=<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: alt_sc",
@@ -191,7 +201,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(AltSc(Alt(Tok(Number), Tok(Ident)), Alt(Tok(Ident), Tok(Number)))),
 			success: true,
 			result:  "{v=abc, next=<id>/def}",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: alt_sc",
@@ -203,21 +213,21 @@ func TestParser(t *testing.T) {
 			}))),
 			success: true,
 			result:  "{v=alt2: abc, next=<id>/def}",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: seq",
 			input:   "123,456",
 			p:       wrap(Seq(Tok(Number), Tok(Ident))),
 			success: false,
-			error:   "Unable to consume token `456` expect `token<4>` in pos 5-8 line 1 col 5",
+			error:   "Unable to consume token `456` expect `<id>` in pos 5-8 line 1 col 5",
 		},
 		{
 			name:    "Parser: seq",
 			input:   "123,456",
 			p:       wrap(Seq2(Tok(Number), Tok(Ident))),
 			success: false,
-			error:   "Unable to consume token `456` expect `token<4>` in pos 5-8 line 1 col 5",
+			error:   "Unable to consume token `456` expect `<id>` in pos 5-8 line 1 col 5",
 		},
 		{
 			name:    "Parser: seq",
@@ -290,7 +300,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(OptSc(Tok(Ident))),
 			success: true,
 			result:  "{v=<nil>, next=<num>/123🍌<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: rep_sc",
@@ -298,7 +308,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(RepSc(Tok(Number))),
 			success: true,
 			result:  "{v=[123 456], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: rep_sc",
@@ -306,7 +316,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(RepSc(Tok(Ident))),
 			success: true,
 			result:  "{v=[], next=<num>/123🍌<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: repr",
@@ -314,7 +324,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(RepR(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=<num>/123🍌<num>/456}🍊{v=[123], next=<num>/456}🍊{v=[123 456], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: rep",
@@ -322,7 +332,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Rep(Tok(Number))),
 			success: true,
 			result:  "{v=[123 456], next=}🍊{v=[123], next=<num>/456}🍊{v=[], next=<num>/123🍌<num>/456}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: rep_n",
@@ -362,14 +372,14 @@ func TestParser(t *testing.T) {
 			p:       wrap(RepN(Tok(Number), 4)),
 			success: false,
 			result:  "",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: many1",
 			input:   "",
 			p:       wrap(Many1(Tok(Number))),
 			success: false,
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: many1",
@@ -377,7 +387,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Many1(Tok(Number))),
 			success: true,
 			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=<num>/789}🍊{v=[123], next=<num>/456🍌<num>/789}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: many1_r",
@@ -385,14 +395,14 @@ func TestParser(t *testing.T) {
 			p:       wrap(Many1R(Tok(Number))),
 			success: true,
 			result:  "{v=[123], next=<num>/456🍌<num>/789}🍊{v=[123 456], next=<num>/789}🍊{v=[123 456 789], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: many1_sc",
 			input:   "",
 			p:       wrap(Many1Sc(Tok(Number))),
 			success: false,
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: many1_sc",
@@ -400,7 +410,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Many1Sc(Tok(Number))),
 			success: true,
 			result:  "{v=[123 456 789], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many",
@@ -408,7 +418,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipMany(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=}🍊{v=[], next=<num>/789}🍊{v=[], next=<num>/456🍌<num>/789}🍊{v=[], next=<num>/123🍌<num>/456🍌<num>/789}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many_r",
@@ -416,7 +426,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipManyR(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=<num>/123🍌<num>/456🍌<num>/789}🍊{v=[], next=<num>/456🍌<num>/789}🍊{v=[], next=<num>/789}🍊{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many_sc",
@@ -424,7 +434,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipManySc(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many1",
@@ -432,7 +442,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipMany1(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=}🍊{v=[], next=<num>/789}🍊{v=[], next=<num>/456🍌<num>/789}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many1_r",
@@ -440,7 +450,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipMany1R(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=<num>/456🍌<num>/789}🍊{v=[], next=<num>/789}🍊{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many1_sc",
@@ -448,7 +458,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipMany1Sc(Tok(Number))),
 			success: true,
 			result:  "{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: skip_many1",
@@ -456,7 +466,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SkipMany1Sc(Tok(Number))),
 			success: false,
 			result:  "",
-			error:   "Unable to consume token `abc` expect `token<1>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `abc` expect `<num>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Parser: list",
@@ -464,7 +474,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(List(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=+/+🍌<num>/789}🍊{v=[123], next=+/+🍌<num>/456🍌+/+🍌<num>/789}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: list",
@@ -472,7 +482,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(ListSc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: list",
@@ -496,7 +506,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
 			success: true,
 			result:  "{v=abc, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: trim_sc",
@@ -504,7 +514,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
 			success: true,
 			result:  "{v=abc, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: trim_sc",
@@ -512,7 +522,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
 			success: true,
 			result:  "{v=abc, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: trim_sc",
@@ -520,7 +530,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(TrimSc(Tok(Ident), Tok(Number))),
 			success: true,
 			result:  "{v=abc, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: trim_sc",
@@ -528,7 +538,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(Trim(Tok(Number), Tok(Number))),
 			success: true,
 			result:  "{v=3, next=}🍊{v=2, next=}🍊{v=2, next=<num>/3}🍊{v=1, next=}🍊{v=1, next=<num>/3}🍊{v=1, next=<num>/2🍌<num>/3}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: SepBy",
@@ -536,7 +546,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: SepBy",
@@ -544,7 +554,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123], next=}🍊{v=[], next=<num>/123}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBy",
@@ -552,7 +562,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=+/+🍌<num>/789}🍊{v=[123], next=+/+🍌<num>/456🍌+/+🍌<num>/789}🍊{v=[], next=<num>/123🍌+/+🍌<num>/456🍌+/+🍌<num>/789}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBySc",
@@ -560,7 +570,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: SepBySc",
@@ -568,7 +578,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBySc",
@@ -576,7 +586,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBySc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1",
@@ -584,7 +594,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
 			success: false,
 			result:  "",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1",
@@ -592,7 +602,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1",
@@ -600,7 +610,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}🍊{v=[123 456], next=+/+🍌<num>/789}🍊{v=[123], next=+/+🍌<num>/456🍌+/+🍌<num>/789}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1Sc",
@@ -608,7 +618,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
 			success: false,
 			result:  "",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1Sc",
@@ -616,7 +626,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:    "Parser: SepBy1Sc",
@@ -624,7 +634,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(SepBy1Sc(Tok(Number), Tok(Add))),
 			success: true,
 			result:  "{v=[123 456 789], next=}",
-			error:   "Nothing to consume expect `token<2>` in end of input",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 		{
 			name:  "Parser: apply",
@@ -638,7 +648,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: true,
 			result:  "{v=, next=<num>/123🍌<num>/456}🍊{v=123, next=<num>/456}🍊{v=123;456, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:  "Failure: err",
@@ -707,7 +717,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(KLeft(Many1(Tok(Number)), NotFollowedBy(Tok(Add)))),
 			success: true,
 			result:  "{v=[123 456], next=}🍊{v=[123], next=<num>/456}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: NotFollowedBy",
@@ -715,7 +725,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(KLeft(Many1(Tok(Number)), NotFollowedBy(Tok(Add)))),
 			success: false,
 			result:  "",
-			error:   "Unable to consume token `+` expect `token<1>` in pos 5-6 line 1 col 5",
+			error:   "Unable to consume token `+` expect `<num>` in pos 5-6 line 1 col 5",
 		},
 		{
 			name:    "Parser: LookAhead",
@@ -731,7 +741,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(LookAhead(Many(Tok(Number)))),
 			success: true,
 			result:  "{v=[[123 456] [123] []], next=<num>/123🍌<num>/456}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: LookAhead",
@@ -739,7 +749,7 @@ func TestParser(t *testing.T) {
 			p:       wrap(LookAhead(Tok(Ident))),
 			success: false,
 			result:  "",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: LookAhead",
@@ -750,7 +760,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: true,
 			result:  "{v=[[123 456] [123] []], next=<num>/123🍌<num>/456}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:  "Parser: LookAhead",
@@ -761,7 +771,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: true,
 			result:  "{v=[[123 456]], next=<num>/123🍌<num>/456}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:  "Parser: LookAhead",
@@ -771,7 +781,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: false,
 			result:  "",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: LookAhead",
@@ -781,7 +791,7 @@ func TestParser(t *testing.T) {
 			})),
 			success: true,
 			result:  "{v=[<nil>], next=<num>/123🍌<num>/456}",
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Parser: LookAhead",
@@ -816,13 +826,13 @@ func TestParser(t *testing.T) {
 			toks := mustLex(tt.input)
 			succ, out, err := tt.p(toks)
 			if tt.success != succ {
-				t.Errorf("[succ]expect %v actual %v", tt.success, succ)
+				t.Errorf("\n[succ]expect: %v\nactual: %v", tt.success, succ)
 			}
 			if out != tt.result {
-				t.Errorf("[out]expect %s actual %s", tt.result, out)
+				t.Errorf("\n[out]expect: %s\nactual: %s", tt.result, out)
 			}
 			if err != tt.error {
-				t.Errorf("[err]expect %s actual %s", tt.error, err)
+				t.Errorf("\n[err]expect: %s\nactual: %s", tt.error, err)
 			}
 		})
 	}
@@ -985,7 +995,7 @@ func TestAmbParser(t *testing.T) {
 			p:       wrap(EXPR.Parser()),
 			success: true,
 			result:  "{v=1, next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: amb, +1",
@@ -993,7 +1003,7 @@ func TestAmbParser(t *testing.T) {
 			p:       wrap(EXPR.Parser()),
 			success: true,
 			result:  "{v=(+ 1), next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: amb, 1+2",
@@ -1001,7 +1011,7 @@ func TestAmbParser(t *testing.T) {
 			p:       wrap(EXPR.Parser()),
 			success: true,
 			result:  "{v=[(1 . (+ 2)), (1 + 2)], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 		{
 			name:    "Parser: amb, 1+2+3",
@@ -1009,7 +1019,7 @@ func TestAmbParser(t *testing.T) {
 			p:       wrap(EXPR.Parser()),
 			success: true,
 			result:  "{v=[(1 . (+ [(2 . (+ 3)), (2 + 3)])), (1 + [(2 . (+ 3)), (2 + 3)])], next=}",
-			error:   "Nothing to consume expect `token<1>` in end of input",
+			error:   "Nothing to consume expect `<num>` in end of input",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1045,7 +1055,7 @@ func TestFailure(t *testing.T) {
 				Tok(Space),
 			)),
 			success: false,
-			error:   "Unable to consume token `123` expect `token<5>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `,` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Failure: seq",
@@ -1055,7 +1065,7 @@ func TestFailure(t *testing.T) {
 				Tok(Number),
 			)),
 			success: false,
-			error:   "Unable to consume token `123` expect `token<4>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `<id>` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:  "Failure: seq",
@@ -1065,7 +1075,7 @@ func TestFailure(t *testing.T) {
 				Tok(Ident),
 			)),
 			success: false,
-			error:   "Unable to consume token `456` expect `token<4>` in pos 5-8 line 1 col 5",
+			error:   "Unable to consume token `456` expect `<id>` in pos 5-8 line 1 col 5",
 		},
 		{
 			name:  "Failure: apply",
@@ -1074,7 +1084,7 @@ func TestFailure(t *testing.T) {
 				return nil
 			})),
 			success: false,
-			error:   "Unable to consume token `123` expect `token<5>` in pos 1-4 line 1 col 1",
+			error:   "Unable to consume token `123` expect `,` in pos 1-4 line 1 col 1",
 		},
 		{
 			name:    "Failure: rep_sc + seq",
@@ -1082,7 +1092,7 @@ func TestFailure(t *testing.T) {
 			p:       wrap(RepSc(Seq(Tok(Number), Tok(Ident)))),
 			success: true,
 			result:  "{v=[[1 a] [2 b] [3 c]], next=<id>/d🍌<id>/e}",
-			error:   "Unable to consume token `d` expect `token<1>` in pos 10-11 line 1 col 10",
+			error:   "Unable to consume token `d` expect `<num>` in pos 10-11 line 1 col 10",
 		},
 		{
 			name:    "Failure: rep_sc + seq",
@@ -1091,7 +1101,7 @@ func TestFailure(t *testing.T) {
 			success: true,
 			result:  "{v=[[1 a] [2 b] [3 c]], next=<id>/d🍌<id>/e}🍊{v=[[1 a] [2 b]], next=<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[[1 a]], next=<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}🍊{v=[], next=<num>/1🍌<id>/a🍌<num>/2🍌<id>/b🍌<num>/3🍌<id>/c🍌<id>/d🍌<id>/e}",
 			// 返回最远的错误
-			error: "Unable to consume token `d` expect `token<1>` in pos 10-11 line 1 col 10",
+			error: "Unable to consume token `d` expect `<num>` in pos 10-11 line 1 col 10",
 		},
 		{
 			name:  "Failure: rep_sc + alt",
@@ -1106,7 +1116,7 @@ func TestFailure(t *testing.T) {
 			success: true,
 			result:  "{v=[1 [a b] 2], next=<id>/c🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
-			error: "Unable to consume token `3` expect `token<4>` in pos 11-12 line 1 col 11",
+			error: "Unable to consume token `3` expect `<id>` in pos 11-12 line 1 col 11",
 		},
 		{
 			name:  "Failure: rep_sc + alt",
@@ -1121,7 +1131,7 @@ func TestFailure(t *testing.T) {
 			success: true,
 			result:  "{v=[1 [a b] 2], next=<id>/c🍌<num>/3}🍊{v=[1 [a b]], next=<num>/2🍌<id>/c🍌<num>/3}🍊{v=[1], next=<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}🍊{v=[], next=<num>/1🍌<id>/a🍌<id>/b🍌<num>/2🍌<id>/c🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
-			error: "Unable to consume token `3` expect `token<4>` in pos 11-12 line 1 col 11",
+			error: "Unable to consume token `3` expect `<id>` in pos 11-12 line 1 col 11",
 		},
 		{
 			name:    "Failure: rep_sc + opt",
@@ -1130,7 +1140,7 @@ func TestFailure(t *testing.T) {
 			success: true,
 			result:  "{v=[[a b] [c d] [e f]], next=<id>/g🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
-			error: "Unable to consume token `3` expect `token<4>` in pos 15-16 line 1 col 15",
+			error: "Unable to consume token `3` expect `<id>` in pos 15-16 line 1 col 15",
 		},
 		{
 			name:    "Failure: rep_sc + opt",
@@ -1139,7 +1149,7 @@ func TestFailure(t *testing.T) {
 			success: true,
 			result:  "{v=[[a b] [c d] [e f]], next=<id>/g🍌<num>/3}🍊{v=[[a b] [c d]], next=<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[[a b]], next=<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}🍊{v=[], next=<id>/a🍌<id>/b🍌<id>/c🍌<id>/d🍌<id>/e🍌<id>/f🍌<id>/g🍌<num>/3}",
 			// Seq(Tok(Ident), Tok(Ident)) 解析到 3 失败
-			error: "Unable to consume token `3` expect `token<4>` in pos 15-16 line 1 col 15",
+			error: "Unable to consume token `3` expect `<id>` in pos 15-16 line 1 col 15",
 		},
 		{
 			name:    "Failure: err",
@@ -1198,7 +1208,7 @@ func fmtResults[R any](results []Result[tokKind, R]) string {
 func fmtToks(toks []token) string {
 	xs := make([]string, len(toks))
 	for i, t := range toks {
-		xs[i] = fmt.Sprintf("%s/%s", stroftk(t.Kind()), t.Lexeme())
+		xs[i] = fmt.Sprintf("%s/%s", t.Kind(), t.Lexeme())
 	}
 	return strings.Join(xs, "🍌")
 }

@@ -7,7 +7,7 @@ package parsec
 // Alt :: p[a] -> p[b] -> p[c] -> ... -> p[a|b|c...]
 // 返回所有可能结果, 当 ps 全部失败时失败
 // foldr (<|>) mzero ps
-func Alt[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
+func Alt[K TK, R any](ps ...Parser[K, R]) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		var xs []Result[K, R]
 		var err *Error
@@ -24,7 +24,7 @@ func Alt[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
 	})
 }
 
-func Alt2[K Ord, R1, R2 any](
+func Alt2[K TK, R1, R2 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 ) Parser[K, Either[R1, R2]] {
@@ -48,14 +48,14 @@ func Alt2[K Ord, R1, R2 any](
 		return newOutput(xs, err, succ)
 	})
 }
-func Alt3[K Ord, T1, T2, T3 any](
+func Alt3[K TK, T1, T2, T3 any](
 	p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
 ) Parser[K, Either[T1, Either[T2, T3]]] {
 	return Alt2(p1, Alt2(p2, p3))
 }
-func Alt4[K Ord, T1, T2, T3, T4 any](
+func Alt4[K TK, T1, T2, T3, T4 any](
 	p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
@@ -63,7 +63,7 @@ func Alt4[K Ord, T1, T2, T3, T4 any](
 ) Parser[K, Either[T1, Either[T2, Either[T3, T4]]]] {
 	return Alt2(p1, Alt3(p2, p3, p4))
 }
-func Alt5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
+func Alt5[K TK, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
 	p4 Parser[K, T4],
@@ -74,7 +74,7 @@ func Alt5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 
 // AltSc :: p[a] -> p[b] -> p[c] -> ... -> p[a|b|c...]
 // 返回第一个结果, 当 ps 全部失败时失败
-func AltSc[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
+func AltSc[K TK, R any](ps ...Parser[K, R]) Parser[K, R] {
 	return parser[K, R](func(toks []Token[K]) Output[K, R] {
 		var err *Error
 		for _, p := range ps {
@@ -88,7 +88,7 @@ func AltSc[K Ord, R any](ps ...Parser[K, R]) Parser[K, R] {
 	})
 }
 
-func AltSc2[K Ord, R1, R2 any](
+func AltSc2[K TK, R1, R2 any](
 	p1 Parser[K, R1],
 	p2 Parser[K, R2],
 ) Parser[K, Either[R1, R2]] {
@@ -112,14 +112,14 @@ func AltSc2[K Ord, R1, R2 any](
 		return fail[K, Either[R1, R2]](err)
 	})
 }
-func AltSc3[K Ord, T1, T2, T3 any](
+func AltSc3[K TK, T1, T2, T3 any](
 	p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
 ) Parser[K, Either[T1, Either[T2, T3]]] {
 	return AltSc2(p1, AltSc2(p2, p3))
 }
-func AltSc4[K Ord, T1, T2, T3, T4 any](
+func AltSc4[K TK, T1, T2, T3, T4 any](
 	p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
@@ -127,7 +127,7 @@ func AltSc4[K Ord, T1, T2, T3, T4 any](
 ) Parser[K, Either[T1, Either[T2, Either[T3, T4]]]] {
 	return AltSc2(p1, AltSc3(p2, p3, p4))
 }
-func AltSc5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
+func AltSc5[K TK, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 	p2 Parser[K, T2],
 	p3 Parser[K, T3],
 	p4 Parser[K, T4],
@@ -142,12 +142,12 @@ func AltSc5[K Ord, T1, T2, T3, T4, T5 any](p1 Parser[K, T1],
 
 // Opt :: p[a] -> p[a|nil]
 // Alt 返回失败, Opt & OptSc 不返回失败, p 错误不消耗 token
-func Opt[K Ord, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
+func Opt[K TK, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
 	return Alt(p, Nil[K, R]())
 }
 
 // OptSc :: p[a] -> p[a|nil]
 // Opt 返回两种结果, OptSc 返回一种结果, 只有 p 失败才返回 nil
-func OptSc[K Ord, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
+func OptSc[K TK, R any](p Parser[K, R]) Parser[K, R /*Option[R]*/] {
 	return AltSc(p, Nil[K, R]())
 }

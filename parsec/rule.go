@@ -2,11 +2,11 @@ package parsec
 
 import "fmt"
 
-func NewRule[K Ord, R any]() *SyntaxRule[K, R] {
+func NewRule[K TK, R any]() *SyntaxRule[K, R] {
 	return &SyntaxRule[K, R]{}
 }
 
-type SyntaxRule[K Ord, R any] struct {
+type SyntaxRule[K TK, R any] struct {
 	Pattern Parser[K, R]
 }
 
@@ -23,7 +23,7 @@ func (r *SyntaxRule[K, R]) Parser() Parser[K, R] {
 	return r
 }
 
-func ExpectEOF[K Ord, R any](out Output[K, R]) Output[K, R] {
+func ExpectEOF[K TK, R any](out Output[K, R]) Output[K, R] {
 	if !out.Success {
 		return out
 	}
@@ -46,7 +46,7 @@ func ExpectEOF[K Ord, R any](out Output[K, R]) Output[K, R] {
 	return newOutput(xs, err, len(xs) != 0)
 }
 
-func ExpectSingleResult[K Ord, R any](out Output[K, R]) (R, error) {
+func ExpectSingleResult[K TK, R any](out Output[K, R]) (R, error) {
 	if !out.Success {
 		return *new(R), out.Error
 	}

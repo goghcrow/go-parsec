@@ -6,7 +6,7 @@ package parsec
 
 // Amb :: p[a] -> p[list[a]]
 // Consumes x and merge group result by consumed tokens.
-func Amb[K Ord, R any](p Parser[K, R]) Parser[K, []R] {
+func Amb[K TK, R any](p Parser[K, R]) Parser[K, []R] {
 	return parser[K, []R](func(toks []Token[K]) Output[K, []R] {
 		branches := p.Parse(toks)
 		if !branches.Success {
