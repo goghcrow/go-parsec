@@ -84,7 +84,9 @@ func S5[T1, T2, T3, T4, T5 any](
 	p5 P[T5],
 ) P[cons[T1, cons[T2, cons[T3, cons[T4, T5]]]]] {
 	p2345 := S2(p2, S2(p3, S2(p4, p5)))
-	return S2(p1, p2345)
+	// make golang happy
+	p := S2(p1, p2345)
+	return p
 }
 func S6[T1, T2, T3, T4, T5, T6 any](
 	p1 P[T1],
@@ -94,7 +96,9 @@ func S6[T1, T2, T3, T4, T5, T6 any](
 	p5 P[T5],
 	p6 P[T6],
 ) P[cons[T1, cons[T2, cons[T3, cons[T4, cons[T5, T6]]]]]] {
+	// make golang happy
 	p3456 := S2(p3, S2(p4, S2(p5, p6)))
-	p123456 := S2(p1, S2(p2, p3456))
+	p23456 := S2(p2, p3456)
+	p123456 := S2(p1, p23456)
 	return p123456
 }
