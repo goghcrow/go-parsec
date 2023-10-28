@@ -118,13 +118,13 @@ func RepN[K TK, R any](p Parser[K, R], cnt int) Parser[K, []R] {
 // List :: p[a] -> p[s] -> p[list[a]]
 // 返回所有可能的序列
 func List[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
-	return Apply(Seq2(p, Rep(KRight(s, p))), applyList[R, Sep])
+	return Apply(Seq2(p, Rep(KRight(s, p))), applyList[R])
 }
 
 // ListSc :: p[a] -> p[s] -> p[list[a]]
 // 返回最长序列
 func ListSc[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep]) Parser[K, []R] {
-	return Apply(Seq2(p, RepSc(KRight(s, p))), applyList[R, Sep])
+	return Apply(Seq2(p, RepSc(KRight(s, p))), applyList[R])
 }
 
 // ListN :: p[a] -> p[s] -> int -> p[list[a]]
@@ -135,11 +135,11 @@ func ListN[K TK, R, Sep any](p Parser[K, R], s Parser[K, Sep], cnt int) Parser[K
 	} else if cnt == 1 {
 		return Apply(p, func(v R) []R { return []R{v} })
 	} else {
-		return Apply(Seq2(p, RepN(KRight(s, p), cnt-1)), applyList[R, Sep])
+		return Apply(Seq2(p, RepN(KRight(s, p), cnt-1)), applyList[R])
 	}
 }
 
 // applyList :: (a, Cons[(sep, a)]) -> list[a]
-func applyList[R, Sep any](v Cons[R, []R]) []R {
+func applyList[R any](v Cons[R, []R]) []R {
 	return concat([]R{v.Car}, v.Cdr...)
 }

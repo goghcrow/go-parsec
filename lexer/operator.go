@@ -52,6 +52,7 @@ type Operator[TokenKind comparable] struct {
 const (
 	// 允许自定义操作符字符列表
 	operators = ":!#$%^&*+./<=>?@\\ˆ|~-"
+	// operators = "!$%&*+\\-./:<=>?@^|~" // 取消 # 与 ˆ
 )
 
 var (
