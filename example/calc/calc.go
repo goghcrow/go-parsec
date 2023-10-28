@@ -1,27 +1,55 @@
 package calc
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/goghcrow/go-parsec/lexer"
 	. "github.com/goghcrow/go-parsec/parsec"
 )
 
-type Val = float64
+func Calc(s string) float64 { return calculator(s) }
 
-func Calc(s string) Val {
-	xs := lex.MustLex(s)
-	toks := make([]Token[TokenKind], len(xs))
-	for i, t := range xs {
-		toks[i] = t
-	}
-	out := parser.Parse(toks)
-	result, err := ExpectSingleResult(ExpectEOF(out))
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
+func Show(s string) string { return printer(s) }
+
+var calculator = BuildParser[float64](
+	func(s string) float64 {
+		num, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			panic(err)
+		}
+		return num
+	},
+	func(op Op, a float64) float64 {
+		switch op {
+		case "+":
+			return a
+		case "-":
+			return -a
+		default:
+			panic("unreached")
+		}
+	},
+	func(op Op, l float64, r float64) float64 {
+		switch op {
+		case "+":
+			return l + r
+		case "-":
+			return l - r
+		case "*":
+			return l * r
+		case "/":
+			return l / r
+		default:
+			panic("unreached")
+		}
+	},
+)
+var printer = BuildParser[string](
+	func(s string) string { return s },
+	func(op Op, a string) string { return fmt.Sprintf("(%s %s)", op, a) },
+	func(op Op, l string, r string) string { return fmt.Sprintf("(%s %s %s)", op, l, r) },
+)
 
 type TokenKind int
 
@@ -49,11 +77,14 @@ func (k TokenKind) String() string {
 	}[k]
 }
 
-var lex *lexer.Lexer[TokenKind]
-var parser Parser[TokenKind, Val]
+type Op = string
 
-func init() {
-	lex = lexer.BuildLexer(func(lex *lexer.Lexicon[TokenKind]) {
+func BuildParser[Val any](
+	val func(string) Val,
+	unary func(Op, Val) Val,
+	binary func(Op, Val, Val) Val,
+) func(s string) Val {
+	lex := lexer.BuildLexer(func(lex *lexer.Lexicon[TokenKind]) {
 		lex.Regex(Number, `\d+(\.\d+)?`)
 		lex.Oper(Add, "+")
 		lex.Oper(Sub, "-")
@@ -68,41 +99,12 @@ func init() {
 		return Str[TokenKind](toMatch)
 	}
 
-	str2num := func(s string) Val {
-		num, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			panic(err)
-		}
-		return num
-	}
-
-	applyNum := func(v Token[TokenKind]) Val {
-		return str2num(v.Lexeme())
-	}
-
+	applyNum := func(v Token[TokenKind]) Val { return val(v.Lexeme()) }
 	applyUnary := func(v Cons[Token[TokenKind], Val]) Val {
-		switch v.Car.Lexeme() {
-		case "+":
-			return v.Cdr
-		case "-":
-			return -v.Cdr
-		default:
-			panic("unreached")
-		}
+		return unary(v.Car.Lexeme(), v.Cdr)
 	}
 	applyBinary := func(a Val, b Cons[Token[TokenKind], Val]) Val {
-		switch b.Car.Lexeme() {
-		case "+":
-			return a + b.Cdr
-		case "-":
-			return a - b.Cdr
-		case "*":
-			return a * b.Cdr
-		case "/":
-			return a / b.Cdr
-		default:
-			panic("unreached")
-		}
+		return binary(b.Car.Lexeme(), a, b.Cdr)
 	}
 
 	// TERM
@@ -124,9 +126,10 @@ func init() {
 	factor := FACTOR.Parser()
 	exp := EXP.Parser()
 
+	sign := Seq2(Alt(strOf("+"), strOf("-")), term)
 	TERM.Pattern = Alt(
 		Apply(Tok(Number), applyNum),
-		Apply(Seq2(Alt(strOf("+"), strOf("-")), term), applyUnary),
+		Apply(sign, applyUnary),
 		KMid(strOf("("), exp, strOf(")")),
 	)
 	FACTOR.Pattern = LRecSc(
@@ -140,5 +143,17 @@ func init() {
 		applyBinary,
 	)
 
-	parser = EXP
+	return func(s string) Val {
+		xs := lex.MustLex(s)
+		toks := make([]Token[TokenKind], len(xs))
+		for i, t := range xs {
+			toks[i] = t
+		}
+		out := EXP.Parse(toks)
+		v, err := ExpectSingleResult(ExpectEOF(out))
+		if err != nil {
+			panic(err)
+		}
+		return v
+	}
 }
