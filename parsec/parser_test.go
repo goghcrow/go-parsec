@@ -73,7 +73,7 @@ func mustLexForCombinator(s string) []Token[tokKind] {
 }
 
 func TestParser(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	for _, tt := range []struct {
 		name    string
 		input   string
@@ -820,6 +820,274 @@ func TestParser(t *testing.T) {
 			success: true,
 			result:  "{v=123, next=}",
 			error:   "",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			toks := mustLex(tt.input)
+			succ, out, err := tt.p(toks)
+			if tt.success != succ {
+				t.Errorf("\n[succ]expect: %v\nactual: %v", tt.success, succ)
+			}
+			if out != tt.result {
+				t.Errorf("\n[out]expect: %s\nactual: %s", tt.result, out)
+			}
+			if err != tt.error {
+				t.Errorf("\n[err]expect: %s\nactual: %s", tt.error, err)
+			}
+		})
+	}
+}
+
+type (
+	node struct {
+		V    string
+		L, R *node
+	}
+	Node = *node
+)
+
+func (n Node) String() string {
+	if n == nil {
+		return ""
+	}
+	if n.V == "" {
+		return fmt.Sprintf("(%s %s)", n.L.String(), n.R.String())
+	}
+	return n.V
+}
+
+func TestChain(t *testing.T) {
+	// t.Parallel()
+
+	type PNode Parser[tokKind, Node]
+	var (
+		nodeOf  = func(s string) Node { return &node{V: s} }
+		pNodeOf = func(s string) PNode {
+			return Apply(Str[tokKind](s), func(v Token[tokKind]) Node {
+				return nodeOf(v.Lexeme())
+			})
+		}
+	)
+
+	add := func(_ Token[tokKind]) func(Node, Node) Node {
+		return func(l, r Node) Node {
+			return &node{L: l, R: r}
+		}
+	}
+
+	pChainl := wrap[Node](
+		Chainl[tokKind, Node](
+			pNodeOf("a"),
+			Apply(Str[tokKind]("+"), add),
+			nodeOf("x"),
+		),
+	)
+	pChainlSc := wrap[Node](
+		ChainlSc[tokKind, Node](
+			pNodeOf("a"),
+			Apply(Str[tokKind]("+"), add),
+			nodeOf("x"),
+		),
+	)
+	pChainl1Sc := wrap[Node](
+		Chainl1Sc[tokKind, Node](
+			pNodeOf("a"),
+			Apply(Str[tokKind]("+"), add),
+		),
+	)
+	pChainrSc := wrap[Node](
+		ChainrSc[tokKind, Node](
+			pNodeOf("a"),
+			Apply(Str[tokKind]("+"), add),
+			nodeOf("x"),
+		),
+	)
+	pChainr1Sc := wrap[Node](
+		Chainr1Sc[tokKind, Node](
+			pNodeOf("a"),
+			Apply(Str[tokKind]("+"), add),
+		),
+	)
+
+	for _, tt := range []struct {
+		name    string
+		input   string
+		p       func(toks []token) (bool, string, string)
+		success bool
+		result  string
+		error   string
+	}{
+		{
+			name:    "chainlSc",
+			input:   "",
+			p:       pChainlSc,
+			success: true,
+			result:  "{v=x, next=}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainlSc",
+			input:   "a",
+			p:       pChainlSc,
+			success: true,
+			result:  "{v=a, next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainlSc",
+			input:   "a+",
+			p:       pChainlSc,
+			success: true,
+			result:  "{v=a, next=+/+}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainlSc",
+			input:   "a+a",
+			p:       pChainlSc,
+			success: true,
+			result:  "{v=(a a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainlSc",
+			input:   "a+a+a",
+			p:       pChainlSc,
+			success: true,
+			result:  "{v=((a a) a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+
+		{
+			name:    "chainl1Sc",
+			input:   "",
+			p:       pChainl1Sc,
+			success: false,
+			result:  "",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainl1Sc",
+			input:   "a",
+			p:       pChainl1Sc,
+			success: true,
+			result:  "{v=a, next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainl1Sc",
+			input:   "a+",
+			p:       pChainl1Sc,
+			success: true,
+			result:  "{v=a, next=+/+}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainl1Sc",
+			input:   "a+a",
+			p:       pChainl1Sc,
+			success: true,
+			result:  "{v=(a a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainl1Sc",
+			input:   "a+a+a",
+			p:       pChainl1Sc,
+			success: true,
+			result:  "{v=((a a) a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+
+		{
+			name:    "chainrSc",
+			input:   "",
+			p:       pChainrSc,
+			success: true,
+			result:  "{v=x, next=}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainrSc",
+			input:   "a",
+			p:       pChainrSc,
+			success: true,
+			result:  "{v=a, next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainrSc",
+			input:   "a+",
+			p:       pChainrSc,
+			success: true,
+			result:  "{v=a, next=+/+}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainrSc",
+			input:   "a+a",
+			p:       pChainrSc,
+			success: true,
+			result:  "{v=(a a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainrSc",
+			input:   "a+a+a",
+			p:       pChainrSc,
+			success: true,
+			result:  "{v=(a (a a)), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+
+		{
+			name:    "chainr1Sc",
+			input:   "",
+			p:       pChainr1Sc,
+			success: false,
+			result:  "",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainr1Sc",
+			input:   "a",
+			p:       pChainr1Sc,
+			success: true,
+			result:  "{v=a, next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainr1Sc",
+			input:   "a+",
+			p:       pChainr1Sc,
+			success: true,
+			result:  "{v=a, next=+/+}",
+			error:   "Nothing to consume expect `a` in end of input",
+		},
+		{
+			name:    "chainr1Sc",
+			input:   "a+a",
+			p:       pChainr1Sc,
+			success: true,
+			result:  "{v=(a a), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+		{
+			name:    "chainr1Sc",
+			input:   "a+a+a",
+			p:       pChainr1Sc,
+			success: true,
+			result:  "{v=(a (a a)), next=}",
+			error:   "Nothing to consume expect `+` in end of input",
+		},
+
+		{
+			name:    "chainl",
+			input:   "a+a",
+			p:       pChainl,
+			success: true,
+			result:  "{v=(a a), next=}🍊{v=a, next=+/+🍌<id>/a}🍊{v=x, next=<id>/a🍌+/+🍌<id>/a}",
+			error:   "Nothing to consume expect `+` in end of input",
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
