@@ -10,6 +10,13 @@ type SyntaxRule[K TK, R any] struct {
 	Pattern Parser[K, R]
 }
 
+func (r *SyntaxRule[K, R]) SetPattern(name string, p Parser[K, R]) {
+	r.Pattern = NewParser(func(toks []Token[K]) Output[K, R] {
+		// println(name) // for debugger left recursive
+		return p.Parse(toks)
+	})
+}
+
 func (r *SyntaxRule[K, R]) Parse(toks []Token[K]) Output[K, R] {
 	if r.Pattern == nil {
 		panic("Rule has not been initialized. Pattern is required before calling parse.")

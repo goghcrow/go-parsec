@@ -197,3 +197,17 @@ func sliceMap[TFrom, TTo any](s []TFrom, f func(TFrom) TTo) []TTo {
 	}
 	return t
 }
+
+func foldLeft[A, B any](xs []A, z B, op func(B, A) B) B {
+	for _, x := range xs {
+		z = op(z, x)
+	}
+	return z
+}
+
+func foldRight[A, B any](xs []A, z B, op func(A, B) B) B {
+	for i := len(xs) - 1; i >= 0; i-- {
+		z = op(xs[i], z)
+	}
+	return z
+}

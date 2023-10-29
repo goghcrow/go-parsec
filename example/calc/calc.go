@@ -126,20 +126,20 @@ func BuildParser[Val any](
 	factor := FACTOR.Parser()
 	exp := EXP.Parser()
 
-	sign := Seq2(Alt(strOf("+"), strOf("-")), term)
-	TERM.Pattern = Alt(
+	sign := Seq2(AltSc(strOf("+"), strOf("-")), term)
+	TERM.Pattern = AltSc(
 		Apply(Tok(Number), applyNum),
 		Apply(sign, applyUnary),
 		KMid(strOf("("), exp, strOf(")")),
 	)
 	FACTOR.Pattern = LRecSc(
 		term,
-		Seq2(Alt(strOf("*"), strOf("/")), term),
+		Seq2(AltSc(strOf("*"), strOf("/")), term),
 		applyBinary,
 	)
 	EXP.Pattern = LRecSc(
 		factor,
-		Seq2(Alt(strOf("+"), strOf("-")), factor),
+		Seq2(AltSc(strOf("+"), strOf("-")), factor),
 		applyBinary,
 	)
 
