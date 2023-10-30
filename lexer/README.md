@@ -1,1 +1,1 @@
-## Simple Lexer
+## Simple Regex Based Lexer
