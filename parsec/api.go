@@ -35,9 +35,20 @@ type Output[K TK, R any] struct {
 	*Error
 }
 
+func (o Output[K, R]) String() string {
+	if o.Success {
+		return fmt.Sprintf("Success(%v)", o.Candidates)
+	}
+	return fmt.Sprintf("Error(%v)", o.Error)
+}
+
 type Result[K TK, R any] struct {
 	Val  R
 	next []Token[K] // rest of tokens
+}
+
+func (r Result[K, R]) String() string {
+	return fmt.Sprintf("%v", r.Val)
 }
 
 type Error struct {

@@ -1,6 +1,8 @@
 package parsec
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func NewRule[K TK, R any]() *SyntaxRule[K, R] {
 	return &SyntaxRule[K, R]{}
@@ -11,10 +13,7 @@ type SyntaxRule[K TK, R any] struct {
 }
 
 func (r *SyntaxRule[K, R]) SetPattern(name string, p Parser[K, R]) {
-	r.Pattern = NewParser(func(toks []Token[K]) Output[K, R] {
-		// println(name) // for debugger left recursive
-		return p.Parse(toks)
-	})
+	r.Pattern = Trace(name, p)
 }
 
 func (r *SyntaxRule[K, R]) Parse(toks []Token[K]) Output[K, R] {
